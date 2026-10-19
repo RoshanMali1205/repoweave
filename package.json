@@ -1,0 +1,121 @@
+{
+  "name": "repoweave",
+  "displayName": "RepoWeave \u2014 Agent Harness Studio",
+  "description": "Inspect Angular and React repositories, preview and generate project-specific agent harnesses for Copilot, Claude Code and Codex.",
+  "version": "0.1.0",
+  "publisher": "roshan-mali-local",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "angular",
+    "react",
+    "agents",
+    "copilot",
+    "claude",
+    "codex"
+  ],
+  "main": "./src/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "RepoWeave reads repository files and writes reviewed agent configuration in trusted local workspaces."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "repoweave.open",
+        "title": "RepoWeave: Open Harness Studio"
+      },
+      {
+        "command": "repoweave.scan",
+        "title": "RepoWeave: Analyze Repository"
+      },
+      {
+        "command": "repoweave.preview",
+        "title": "RepoWeave: Preview Harness"
+      },
+      {
+        "command": "repoweave.apply",
+        "title": "RepoWeave: Apply Previewed Harness"
+      },
+      {
+        "command": "repoweave.enrich",
+        "title": "RepoWeave: Analyze Selected Files with AI"
+      },
+      {
+        "command": "repoweave.bootstrap",
+        "title": "RepoWeave: Copy Architecture Review Prompt"
+      },
+      {
+        "command": "repoweave.validate",
+        "title": "RepoWeave: Validate Installed Harness"
+      },
+      {
+        "command": "repoweave.integrations",
+        "title": "RepoWeave: Configure Integration Preferences"
+      }
+    ],
+    "configuration": {
+      "title": "RepoWeave",
+      "properties": {
+        "repoweave.targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "copilot",
+              "claude",
+              "codex"
+            ]
+          },
+          "default": [
+            "copilot"
+          ],
+          "description": "Clients to generate harness files for. Multi-client output uses shared skills to avoid duplicate discovery."
+        },
+        "repoweave.includeHooks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include a read-only profile freshness hook for supported hosts. Preview the command before applying."
+        },
+        "repoweave.maxSourceFiles": {
+          "type": "integer",
+          "default": 4000,
+          "minimum": 1,
+          "maximum": 20000,
+          "description": "Maximum first-party source files analyzed per scan. Omitted files are reported."
+        },
+        "repoweave.agentPrefix": {
+          "type": "string",
+          "default": "",
+          "description": "Prefix for generated agent, skill, prompt and scoped instruction names. Empty derives a slug from the root package name, then the folder name, then project."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "package": "vsce package --allow-missing-repository --no-rewrite-relative-links",
+    "scan": "node scripts/cli.js scan",
+    "check": "node --check src/extension.js && node --check src/core/ai.js && node --check src/core/fs.js && node --check src/core/generator.js && node --check src/core/prefix.js && node --check src/core/scanner.js && node --check src/core/semantic.js && node --check src/core/template.js && node --check src/core/writer.js && node --check scripts/cli.js"
+  },
+  "dependencies": {
+    "typescript": "5.9.3",
+    "ignore": "7.0.5",
+    "jsonc-parser": "3.3.1",
+    "yaml": "2.8.1",
+    "@iarna/toml": "2.2.5"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "3.6.0"
+  }
+}

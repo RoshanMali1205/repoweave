@@ -1,0 +1,20 @@
+{{! Derived from angular-orchestrator.agent.md. Target: {{repo.prefix}}-deliver-feature.prompt.md. }}
+---
+description: "Deliver a feature end to end through plan, implement, style, test, fix and review, with real validation evidence."
+agent: {{repo.prefix}}-orchestrator
+---
+
+Deliver the feature below for {{project.name}} using the delivery pipeline.
+
+1. Classify the route (new logic, UI changes, design available) and skip stages that do not apply.
+2. Plan, then run only the applicable stages. Give writing agents disjoint files.
+3. Validate each agent's output contract before the next stage.
+4. Run `{{project.commands.test}}` in a bounded non-watch mode and report the exit code; repair at most twice per distinct failure.
+5. Finish with acceptance-criterion status, files changed, checks actually run, open risks and next actions.
+
+${input:Feature description, acceptance criteria or work item ID}
+
+## Related files
+
+- `{{repo.prefix}}-orchestrator.agent.md`
+- `.repoweave/harness.md`

@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-01-15",
+  "architecture": {
+    "summary": "Feature areas live under src/app/features/<area>. Each area owns its routes, a facade service and a signal store. Shared presentational components live in src/app/shared/components."
+  },
+  "conventions": {
+    "list": ["Components use the OnPush strategy unless they hold mutable timers.", "Constants are UPPER_SNAKE_CASE in a co-located constants file."],
+    "naming": "Files are kebab-case with a type suffix: order-list.component.ts.",
+    "lineLength": 140
+  },
+  "ui": {
+    "precedence": "The primary component library is used for every widget it covers; the secondary library is used only for dialogs and autocomplete.",
+    "mapping": [
+      { "need": "Data table", "use": "<primary-table>", "avoid": "<secondary-table>" },
+      { "need": "Dialog", "use": "SecondaryDialogService" }
+    ],
+    "sharedComponents": [
+      { "name": "app-empty-state", "use": "Empty result placeholders" },
+      { "name": "app-loading-state", "use": "Spinners and skeletons" }
+    ],
+    "icons": "Use the icon font declared in package.json; decorative icons get aria-hidden."
+  },
+  "i18n": {
+    "pattern": "Bind visible text through the translate pipe: {{ 'orders.title' | translate }}.",
+    "keyNaming": "Dot-separated feature.key, lower camel case."
+  },
+  "services": {
+    "httpPattern": "All HTTP calls go through ApiClient in src/app/core/services/api-client.service.ts, which adds headers and maps errors.",
+    "coreServices": [
+      { "name": "api-client.service.ts", "responsibility": "HTTP access and error mapping" },
+      { "name": "notification.service.ts", "responsibility": "User-visible notifications" }
+    ],
+    "errorHandling": "Map failures to a user-safe message through NotificationService.",
+    "caching": "Reference lists are cached per tenant and invalidated on create, update and delete."
+  },
+  "styles": {
+    "breakpoints": "Use the mixins in src/styles/_breakpoints.scss (sm 600px, md 960px, lg 1280px); never write raw media queries.",
+    "layoutOffsets": "The side navigation takes 240px expanded and 64px collapsed.",
+    "tokenImport": "Import tokens with @use 'tokens' as t; reference t.$color-primary."
+  },
+  "testing": {
+    "mockingStyle": "Provide typed fakes with useValue; prefer spies over full fakes for one-method dependencies.",
+    "coverageTarget": "80% lines on changed files",
+    "skipPatterns": ["*.routes.ts", "main.ts", "environment*.ts"]
+  },
+  "migrations": [
+    { "path": "src/app/features/legacy-reports", "plan": "docs/legacy-reports-migration.md", "notes": "Mixed component libraries and missing OnPush are expected until phase 3." }
+  ],
+  "docs": {
+    "designDocDir": "docs/design",
+    "syncRule": "Update docs/agents.md when an agent or instruction file changes."
+  },
+  "branding": {
+    "source": "docs/design-system.md and src/styles/tokens/",
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "palette": [
+      { "name": "Primary", "value": "#1F6FEB", "token": "$color-primary", "usage": "Buttons, links, selected states" }
+    ],
+    "typography": [
+      { "level": "H1", "size": "24px", "weight": "600", "lineHeight": "1.25", "usage": "Page title" }
+    ],
+    "components": [
+      { "component": "Button", "rule": "Height 40px, radius 4px, primary uses $color-primary." }
+    ],
+    "rules": ["Never use a literal colour in a component stylesheet."]
+  },
+  "domains": [
+    {
+      "slug": "orders",
+      "name": "Order management",
+      "triggers": ["order list", "order details", "OrderListComponent"],
+      "overview": "Lists, filters and exports customer orders.",
+      "sourceOfTruth": "docs/design/Order-Management-Design.md",
+      "keyFiles": ["src/app/features/orders/order-list/order-list.component.ts", "src/app/features/orders/orders.routes.ts"],
+      "acceptanceCriteria": ["Search requires at least three characters.", "Export uses translated column headers."],
+      "constraints": ["Use OrderFacade for all data access."],
+      "translationKeys": ["orders.title", "orders.export"],
+      "tests": "Cover empty results, export and filter reset."
+    }
+  ]
+}

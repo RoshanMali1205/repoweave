@@ -1,0 +1,13 @@
+# Complete the repository architecture review
+
+RepoWeave generated a usable baseline from configuration and syntax evidence. This review supplies semantic understanding that a static scanner cannot prove. Read profile.json, architecture.md, scan-contract.md, harness.md and integrations.md in .repoweave. Start with applicable existing root and scoped instructions listed in the profile; they were indexed, not semantically interpreted by the scanner.
+
+1. Inventory every first-party package and architecture area. Resolve the scan's exclusions and omitted files. Inspect full files in batches and keep a coverage ledger. Never claim complete understanding from a sample.
+2. Read package.json, lockfile and config inheritance; determine actual per-subtree component composition, routes, state, services, styling, testing and build patterns. Trace routes through UI, service/state, API and tests. Treat framework presence, majority patterns and schematic defaults as observations, not universal rules.
+3. Mine concrete examples for i18n, service wrappers, mocks, token imports and shared components. Use source paths and symbols. Preserve mixed architectures and migration exceptions. Record observations and deliberate team decisions separately. File modification times after checkout are not reliable coding-history evidence.
+4. Ask one relevant question about Azure DevOps/Jira and Figma if needed. Discover available MCP tools and verify read access. Use files/pasted requirements when offline. Never block local generation on optional integrations.
+5. Refine the facts behind the agents, skills, scoped instructions and task entrypoints. Keep the generator/fixer boundary and bounded repair process. Add one `domains[]` entry only for a sustained feature area. Do not rewrite production source, dependencies, branches or CI as part of bootstrap.
+6. Write verified facts to `.repoweave/semantic.json`, conforming to `.repoweave/semantic.schema.json`. `.repoweave/semantic.example.json` shows every field. Cite source paths in `.repoweave/review-notes.md`. RepoWeave does not create or overwrite `semantic.json`, and it is not part of the generated manifest. Preserve other user edits: hand-edited generated files are conflicts, so preview and merge deliberately.
+7. Validate the JSON, then ask the user to rerun RepoWeave Preview, review the diff and Apply. A generated harness is not proof that every agent has executed. Record what was not tested.
+
+Use native delegation where supported; otherwise state that roles run sequentially. User authorization is not canceled by fixed approval gates in reference material. For clear authorized work, proceed through unblocked steps and ask only when a missing decision changes behavior.
