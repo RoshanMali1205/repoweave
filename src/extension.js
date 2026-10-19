@@ -17,11 +17,13 @@ function settings(root){const c=vscode.workspace.getConfiguration('repoweave',vs
 async function document(content,title='RepoWeave',language='markdown'){const d=await vscode.workspace.openTextDocument({content,language});await vscode.window.showTextDocument(d,{preview:true});return d;}
 function render(root){
  if(!studio)return;const s=sessions.get(root)||{},opts=root?settings(root):{};const nonce=hash(String(Math.random()));
+ const trackerLabel=(opts.integrations||[]).filter(id=>id==='azure'||id==='jira').map(id=>id==='azure'?'Azure DevOps':'Jira').join(' and ')||'pasted or local requirements';
  studio.webview.html=`<!doctype html><html><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';"><meta name="viewport" content="width=device-width, initial-scale=1"><style nonce="${nonce}">
  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:26px;max-width:1100px;margin:auto;background:var(--vscode-editor-background)}h1{font-size:28px;margin-bottom:8px}p{line-height:1.6}.muted{color:var(--vscode-descriptionForeground)}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}button{border:1px solid var(--vscode-button-border,transparent);padding:10px 14px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);cursor:pointer;border-radius:4px}button:focus{outline:2px solid var(--vscode-focusBorder)}table{border-collapse:collapse;width:100%;margin-top:18px}td,th{text-align:left;padding:12px;border-bottom:1px solid var(--vscode-panel-border)}.pill{padding:6px 10px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);border-radius:4px;display:inline-block;margin:4px}.card{border:1px solid var(--vscode-panel-border);padding:18px;border-radius:6px;margin:18px 0}code{overflow-wrap:anywhere}ul{line-height:1.7}
  </style></head><body><p class="muted">PROJECT CONTEXT · AGENTS · VERIFICATION</p><h1>RepoWeave</h1><p>Build an agent harness that follows your repository.</p><p class="muted">${esc(root||'Choose a repository to begin.')}</p>
  <div class="buttons"><button data-action="run">Generate harness (all steps)</button><button data-action="scan">1. Analyze</button><button data-action="preview">2. Preview files</button><button data-action="apply">3. Apply preview</button><button data-action="enrich">AI review selected files</button><button data-action="bootstrap">Copy architecture prompt</button><button data-action="integrations">Integrations</button><button data-action="validate">Validate</button></div>
- <p>${(opts.targets||[]).map(t=>'<span class="pill">'+esc(t)+'</span>').join('')} <span class="pill">Hooks ${opts.includeHooks?'requested':'off'}</span></p>
+ <p>${(opts.targets||[]).map(t=>'<span class="pill">'+esc(t)+'</span>').join('')} <span class="pill">Hooks ${opts.includeHooks?'requested':'off'}</span> <span class="pill">Tracker: ${esc(trackerLabel)}</span></p>
+ <p>Connecting a tracker lets agents fetch the task. RepoWeave itself does not sign in or call the tracker API.</p>
  <section class="card"><h2>Repository evidence</h2>${s.profile?`<p>${s.profile.coverage.analyzedSourceFiles} / ${s.profile.coverage.eligibleSourceFiles} eligible source files analyzed · ${s.profile.projects.length} project roots · semantic review ${esc(s.profile.coverage.semanticReview)}</p><table><thead><tr><th>Project</th><th>Frameworks</th><th>Styles</th><th>Tests declared</th></tr></thead><tbody>${s.profile.projects.map(p=>`<tr><td>${esc(p.root)}</td><td>${esc(p.frameworks.map(f=>f.package+' '+(f.resolved||f.declared)).join(', '))}</td><td>${esc(Object.keys(p.styles).join(', '))}</td><td>${esc(p.tooling.tests.map(t=>t.package).join(', '))}</td></tr>`).join('')}</tbody></table>`:'<p>Analyze reads configuration and source syntax. It never executes project scripts.</p>'}</section>
  <section class="card"><h2>Generation</h2>${s.plan?`<p>${s.plan.entries.filter(e=>e.status==='create').length} new · ${s.plan.entries.filter(e=>e.status==='update').length} updates · ${s.plan.entries.filter(e=>e.status==='conflict').length} conflicts · ${s.plan.retained.length} retained from prior targets</p>`:'<p>Preview creates the proposed agents, skills, instructions, prompts and harness in memory. Apply writes only that reviewed plan.</p>'}<p class="muted">Existing rules and modified generated files are protected. Generation uses deterministic templates; AI observations remain separately labeled suggestions.</p></section>
  <p class="muted">${s.result?esc(s.result):'Use the generated architecture-review prompt to verify business flows and conventions in your coding host.'}</p>
@@ -78,8 +80,21 @@ async function enrich(root){
  const s=sessions.get(root);s.analysis=response;s.plan=null;s.result='AI observations ready for preview. They are suggestions, not verified project rules.';render(root);await document(JSON.stringify(response,null,2),'AI review','json');
 }
 async function integrations(root){
- const s=sessions.get(root)||{};const picked=await vscode.window.showQuickPick([{label:'Azure DevOps',id:'azure',picked:s.integrations?.includes('azure')},{label:'Jira',id:'jira',picked:s.integrations?.includes('jira')},{label:'Figma',id:'figma',picked:s.integrations?.includes('figma')}],{canPickMany:true,placeHolder:'Choose optional integrations. Leave empty to continue offline. This does not connect accounts.'});if(!picked)return;
- s.integrations=picked.map(x=>x.id);s.plan=null;sessions.set(root,s);render(root);await document(fs.readFileSync(path.join(__dirname,'../resources/integrations.md'),'utf8'));
+ const s=sessions.get(root)||{};
+ const picked=await vscode.window.showQuickPick([
+  {label:'Connect Azure DevOps',id:'azure',description:'Lets agents fetch the work item before planning. RepoWeave does not sign in or call the tracker API.'},
+  {label:'Connect Jira',id:'jira',description:'Lets agents fetch the work item before planning. RepoWeave does not sign in or call the tracker API.'},
+  {label:'Continue without a tracker (pasted or local requirements)',id:'offline',description:'Planning uses pasted requirements or local files. RepoWeave does not sign in or call the tracker API.'}
+ ],{canPickMany:false,placeHolder:'Connect Azure DevOps or Jira so agents can fetch the task, or continue from pasted or local requirements. RepoWeave does not sign in or call the tracker API.'});
+ if(!picked)return;
+ // Figma stays a CLI or earlier-session preference. This prompt records only the tracker choice.
+ const kept=(s.integrations||[]).filter(id=>id==='figma');
+ s.integrations=picked.id==='offline'?kept:[...kept,picked.id];
+ s.plan=null;
+ s.result=picked.id==='offline'
+  ?'Continuing without a tracker. Agents use pasted or local requirements. RepoWeave does not sign in or call the tracker API.'
+  :(picked.id==='azure'?'Azure DevOps':'Jira')+' selected so agents can fetch the task. RepoWeave does not sign in or call the tracker API. This records a choice for the next preview.';
+ sessions.set(root,s);render(root);await document(fs.readFileSync(path.join(__dirname,'../resources/integrations.md'),'utf8'));
 }
 async function dispatch(action,root){
  if(busy){vscode.window.showInformationMessage('RepoWeave is completing another operation.');return;}

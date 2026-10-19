@@ -4,7 +4,15 @@ Generate a repository-aware, multi-agent harness for Angular and React projects,
 
 *By Roshan Mali*
 
-Version 0.1.0 is a working local preview. It has not been published to the Visual Studio Marketplace.
+Version 0.1.1 is a working local preview. It has not been published to the Visual Studio Marketplace.
+
+## Quick start
+
+1. Install the `.vsix` (Extensions view → `...` → **Install from VSIX…**), then reload the window.
+2. Open an Angular or React project and trust the workspace.
+3. Press **Ctrl+Shift+P** and run **RepoWeave: Generate Harness (All Steps)**. It analyzes the repository, shows the planned files, asks once before writing, applies them and validates the result.
+
+Prefer to go step by step? Use **RepoWeave: Analyze Repository**, **Preview Harness**, **Apply Previewed Harness** and **Validate Installed Harness**, or open the studio from the **RepoWeave** item in the status bar.
 
 ## Overview
 
@@ -24,7 +32,7 @@ RepoWeave is deliberately honest about what static analysis can establish. Busin
 - **Deterministic generation.** The same profile and options always produce the same files, for one or more of Copilot, Claude Code and Codex, using each host's native agent and skill formats.
 - **Safe write model.** Preview with per-file diffs, hash-based conflict detection, managed blocks in root instruction files, backups, a transaction journal, a write lock and rollback on failure.
 - **Optional AI review.** Selected files can be sent, after you review the redacted payload, to a model exposed through the VS Code Language Model API. Observations must cite the selected files and stay labeled as unverified suggestions.
-- **Optional integration preferences.** Azure DevOps, Jira and Figma preferences enable the corresponding role templates and an MCP onboarding skill. RepoWeave does not install servers, connect accounts or request credentials.
+- **Optional tracker connection.** The studio asks you to connect Azure DevOps or Jira, or to continue from pasted or local requirements. Azure or Jira adds the tracker specialist so agents can fetch the work item before planning. Figma, requested with `--integrations figma` or detected from a filename hint, adds the design reviewer. RepoWeave does not sign in, store tokens, or call the tracker API.
 - **Optional freshness hook.** A read-only SessionStart hook can warn when tracked configuration has changed since the profile was generated.
 
 ## How it works
@@ -107,7 +115,7 @@ A defect follows researcher, then implementer or test-fixer, then reviewer. Ther
 
 | Agent | Added when | Purpose |
 |---|---|---|
-| `{prefix}-integration-specialist` | Azure DevOps or Jira is requested | Resolves tracker context |
+| `{prefix}-integration-specialist` | Azure DevOps or Jira is requested | Fetches the work item before planning, through the host's existing MCP connection |
 | `{prefix}-design-reviewer` | Figma is requested or a Figma hint is detected | Compares an implementation against a supplied design (read-only) |
 | `{prefix}-a11y-label-fixer` | Sonar is detected | Fixes inputs that lack an accessible label |
 | `{prefix}-feature-{slug}` | One entry in `.repoweave/semantic.json` `domains` | Specialist for that feature |
@@ -145,13 +153,14 @@ All commands are also available from the Command Palette:
 | Command | Description |
 |---|---|
 | **RepoWeave: Open Harness Studio** | Opens the studio panel with all actions and the current analysis and preview status |
+| **RepoWeave: Generate Harness (All Steps)** | Analyzes the repository, shows the preview, and writes it after one confirmation, then validates |
 | **RepoWeave: Analyze Repository** | Scans the repository and opens the architecture evidence report |
 | **RepoWeave: Preview Harness** | Generates the harness in memory and shows proposed changes and diffs |
 | **RepoWeave: Apply Previewed Harness** | Writes the reviewed preview after a confirmation dialog |
 | **RepoWeave: Analyze Selected Files with AI** | Sends selected, reviewed files to a VS Code language model for evidence-bound observations |
 | **RepoWeave: Copy Architecture Review Prompt** | Copies a prompt that starts the bootstrap architecture review in your coding host |
 | **RepoWeave: Validate Installed Harness** | Checks installed files against the manifest, their syntax and their cross-references |
-| **RepoWeave: Configure Integration Preferences** | Selects Azure DevOps, Jira or Figma preferences for the next preview |
+| **RepoWeave: Connect Azure DevOps or Jira** | Asks you to connect Azure DevOps, connect Jira, or continue from pasted or local requirements. The choice is stored for the next preview. RepoWeave does not sign in or call the tracker API |
 
 The extension requires Workspace Trust and supports filesystem workspaces, including VS Code remote extension hosts. Virtual workspaces are not supported. In a multi-root workspace, you choose the repository for each command. Changing RepoWeave settings discards the current preview, so preview again before applying.
 
@@ -178,7 +187,7 @@ Options:
 - `--project PATH` selects the repository. It defaults to the current directory.
 - `--target` accepts `copilot` (the default), `claude`, `codex`, `all`, or a comma-separated list such as `copilot,claude`.
 - `--hooks` includes the read-only freshness hook.
-- `--integrations` accepts a comma-separated list of `azure`, `jira` and `figma`. Azure or Jira adds the tracker specialist. Figma adds the design reviewer.
+- `--integrations` accepts a comma-separated list of `azure`, `jira` and `figma`. Azure or Jira adds the tracker specialist, which fetches the work item before planning when the host already has an MCP connection. Figma adds the design reviewer. The studio records one tracker choice; this flag can request both Azure DevOps and Jira. A listed name is a request, not proof of access.
 - `--prefix SLUG` overrides the derived agent-name prefix. An empty `repoweave.agentPrefix` setting derives it.
 - `--yes` confirms `apply`.
 

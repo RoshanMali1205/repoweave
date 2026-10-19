@@ -46,7 +46,7 @@ Confidence: `projectContext(profile, project, semantic)` turns profile facts int
 | `repo.designTool` | Figma requested or a Figma file-name hint | ~ | else: generic "design" |
 | `repo.hasDesignTool` | same | ~ | false → section omitted |
 
-Design review is included when Figma is requested or detected. The tracker specialist is included only when Azure DevOps or Jira is requested. A filename hint alone does not add it.
+Design review is included when Figma is requested or detected. The tracker specialist is included only when Azure DevOps or Jira is requested. A filename hint alone does not add it. When that specialist is included, the orchestrator has it fetch the work item through the host's existing MCP connection before planning a feature or defect. When it is not included, the generated harness asks once whether to connect Azure DevOps or Jira and honors a skip.
 
 ### Project identity and framework
 

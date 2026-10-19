@@ -54,6 +54,7 @@ test('design, tracker, Sonar and semantic domains add only those agents',async t
  put(r,'sonar-project.properties','sonar.projectKey=demo\n');
  g=generate(await scan(r),{targets:['copilot'],integrations:['jira']});
  assert.ok(names(g).includes('demo-integration-specialist'));
+ assert.match(g.files.find(f=>f.path.endsWith('demo-orchestrator.agent.md')).content,/Before planning a feature or defect[\s\S]*one read-only check/);
  assert.ok(names(g).includes('demo-a11y-label-fixer'));
  assert.ok(g.files.some(f=>f.path.includes('design-compliance')));
  const example=fs.readFileSync(path.join(__dirname,'../resources/semantic.example.json'),'utf8');
@@ -70,6 +71,43 @@ test('design, tracker, Sonar and semantic domains add only those agents',async t
  assert.equal(manifest.files['.repoweave/semantic.json'],undefined);
  put(r,'.repoweave/semantic.json',example.replace('"version": 1','"version": 1, "extra": true'));
  const broken=await scan(r);assert.throws(()=>generate(broken,{root:r}),/invalid/);
+});
+test('a requested tracker fetches the work item before planning and an empty list stays offline',async t=>{
+ const r=app(t,{name:'demo'});
+ const file=(g,suffix)=>g.files.find(f=>f.path.endsWith(suffix)).content;
+ const ask=/This project can connect Azure DevOps or Jira so the orchestrator fetches the work item \(title, description, acceptance criteria, repro\) before planning/;
+ const offline=generate(await scan(r),{targets:['copilot'],integrations:[]});
+ assert.ok(!names(offline).includes('demo-integration-specialist'));
+ assert.doesNotMatch(file(offline,'demo-orchestrator.agent.md'),/integration-specialist/);
+ assert.doesNotMatch(file(offline,'demo-orchestrator.agent.md'),/one read-only check/);
+ assert.match(file(offline,'demo-orchestrator.agent.md'),/ask once/i);
+ assert.match(file(offline,'demo-orchestrator.agent.md'),ask);
+ assert.match(file(offline,'.repoweave/harness.md'),ask);
+ assert.match(file(offline,'.repoweave/BOOTSTRAP.md'),ask);
+ assert.match(file(offline,'.repoweave/integrations.md'),/does not sign in/);
+ assert.deepEqual(JSON.parse(file(offline,'.repoweave/integration-status.json')).requested,[]);
+ for(const integrations of [['azure'],['jira'],['azure','jira']]){
+  const g=generate(await scan(r),{targets:['copilot'],integrations});
+  assert.ok(names(g).includes('demo-integration-specialist'));
+  const orch=file(g,'demo-orchestrator.agent.md'),planner=file(g,'demo-planner.agent.md'),specialist=file(g,'demo-integration-specialist.agent.md');
+  assert.match(orch,/demo-integration-specialist/);
+  assert.match(orch,/Before planning a feature or defect/);
+  assert.match(orch,/one read-only check/);
+  assert.match(orch,/untrusted data/);
+  assert.doesNotMatch(orch,ask);
+  assert.match(planner,/demo-integration-specialist/);
+  assert.match(planner,/one read-only check/);
+  assert.match(planner,/untrusted data/);
+  assert.match(specialist,/one read-only check/);
+  assert.match(specialist,/untrusted data/);
+  assert.match(specialist,/separate authorisation/);
+  const status=JSON.parse(file(g,'.repoweave/integration-status.json'));
+  assert.deepEqual(status.requested,[...integrations].sort());
+  assert.match(status.status,/does not sign in/);
+ }
+ const both=generate(await scan(r),{targets:['copilot'],integrations:['jira','azure']});
+ assert.match(file(both,'demo-orchestrator.agent.md'),/Azure DevOps and Jira/);
+ assert.match(file(both,'demo-planner.agent.md'),/Azure DevOps and Jira/);
 });
 test('an earlier rw agent file is retained and not deleted',async t=>{
  const r=app(t,{name:'demo'});
