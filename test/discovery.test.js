@@ -124,6 +124,17 @@ test('Angular lazy routes, React routes, Next pages and main files carry evidenc
  assert.equal(main.value.hubs[0].file,'src/app/shared/widget.ts');assert.ok(main.value.hubs[0].inDegree>=2);
  assert.ok(main.evidence.includes('src/main.ts')&&main.evidence.includes('src/app/shared/widget.ts'));
 });
+test('an empty Angular routes file is still the root routes file',async t=>{
+ const r=temp(t);put(r,'package.json',{name:'empty-routes',dependencies:{'@angular/core':'^21.0.0'}});
+ put(r,'src/main.ts',"import {bootstrapApplication} from '@angular/platform-browser'; bootstrapApplication(null);");
+ put(r,'src/app/app.config.ts',"import {provideRouter} from '@angular/router'; import {routes} from './app.routes'; export const appConfig={providers:[provideRouter(routes)]};");
+ put(r,'src/app/app.routes.ts','export const routes = [];');
+ const project=(await scan(r)).projects[0],main=project.mainFiles;
+ assert.deepEqual(main.value.entries,['src/main.ts']);
+ assert.deepEqual(main.value.rootRoutes,['src/app/app.routes.ts']);
+ assert.deepEqual(main.value.appConfig,['src/app/app.config.ts']);
+ assert.equal(project.routes.confidence,'unknown');
+});
 test('Angular unit-test builder: runner option is observed, default runner is only inferred',async t=>{
  const r=temp(t);put(r,'package.json',{dependencies:{'@angular/core':'^21.0.0'}});const ws=o=>({projects:{app:{root:'',architect:{test:{builder:'@angular/build:unit-test',...(o?{options:o}:{})}}}}});
  put(r,'angular.json',ws());let s=(await scan(r)).projects[0].stack.testing;assert.equal(s.value.runner,'Vitest');assert.equal(s.confidence,'inferred');

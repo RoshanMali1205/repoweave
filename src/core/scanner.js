@@ -175,7 +175,8 @@ async function scan(projectRoot, options={}) {
   tree.sort((a,b)=>a.fullPath.localeCompare(b.fullPath)||a.file.localeCompare(b.file)||a.line-b.line);
   const rootRe=/provideRouter|forRoot|create\w*Router|useRoutes/;
   const routeFiles=uniq(own.filter(s=>s.routeDefs.length||s.signals.some(x=>/provideRouter|RouterModule\.for|create\w*Router|useRoutes/.test(x.kind))).map(s=>s.file)).sort();
-  const rootRoutes=uniq([...own.filter(s=>s.signals.some(x=>rootRe.test(x.kind))&&s.routeDefs.length).map(s=>s.file),...routeFiles.filter(f=>/(^|\/)app[.-](routes|routing\.module)\.ts$/.test(f)),...ownFiles.filter(f=>deps.next&&/^(?:src\/)?(app\/layout|pages\/_app)\.[jt]sx?$/.test(rel(f)))]).sort();
+  const namedRoots=ownFiles.filter(f=>/(^|\/)app[.-](routes|routing\.module)\.ts$/.test(f));
+  const rootRoutes=uniq([...own.filter(s=>s.signals.some(x=>rootRe.test(x.kind))&&s.routeDefs.length).map(s=>s.file),...namedRoots,...ownFiles.filter(f=>deps.next&&/^(?:src\/)?(app\/layout|pages\/_app)\.[jt]sx?$/.test(rel(f)))]).sort();
   const entries=own.filter(s=>s.signals.some(x=>/bootstrap|createRoot|hydrateRoot/.test(x.kind))).map(s=>s.file).sort();
   const appConfig=ownFiles.filter(f=>/(^|\/)(app\.config|app\.module|app\.config\.server)\.ts$|(^|\/)App\.[jt]sx?$/.test(f)).sort();
   const hubs=own.filter(s=>!specRE.test(s.file)&&(inDegree.get(s.file)||0)>=2).map(s=>({file:s.file,inDegree:inDegree.get(s.file)})).sort((a,b)=>b.inDegree-a.inDegree||a.file.localeCompare(b.file)).slice(0,10);

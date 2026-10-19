@@ -10,7 +10,7 @@ const {validateFiles}=require('../src/core/writer');
 const semantic=require('../src/core/semantic');
 function temp(t){const d=fs.mkdtempSync(path.join(os.tmpdir(),'repoweave-'));t.after(()=>fs.rmSync(d,{recursive:true,force:true}));return d;}
 function put(r,p,v){fs.mkdirSync(path.dirname(path.join(r,p)),{recursive:true});fs.writeFileSync(path.join(r,p),typeof v==='string'?v:JSON.stringify(v));}
-function app(t,extra={}){const r=temp(t);put(r,'package.json',{name:extra.name||'@acme/My App',scripts:{test:'vitest'}});put(r,'src/a.ts','export class A {}');return r;}
+function app(t,extra={}){const r=temp(t);put(r,'package.json',{name:extra.name||'@acme/My App',dependencies:{react:'^19.0.0'},scripts:{test:'vitest'}});put(r,'src/a.ts','export class A {}');return r;}
 const names=g=>g.files.filter(f=>f.path.startsWith('.github/agents/')).map(f=>f.path.slice('.github/agents/'.length,-'.agent.md'.length)).sort();
 function fm(text){const m=/^---\n([\s\S]*?)\n---\n/.exec(text);return YAML.parse(m[1]);}
 
@@ -27,7 +27,7 @@ test('generated names use the prefix and omit defect and pull-request agents',as
  assert.equal(g.prefix,'my-app');
  assert.deepEqual(names(g),['my-app-harness-builder','my-app-implementer','my-app-orchestrator','my-app-planner','my-app-researcher','my-app-reviewer','my-app-test-fixer','my-app-test-generator','my-app-ui-specialist']);
  assert.ok(!g.files.some(f=>/defect-analyst|pr-reviewer|analyse-defect|review-pr/.test(f.path)));
- assert.ok(g.files.some(f=>f.path==='.github/skills/my-app-bootstrap/SKILL.md'));
+ assert.ok(g.files.some(f=>f.path==='.agents/skills/my-app-bootstrap/SKILL.md'));
  assert.ok(g.files.some(f=>f.path==='.github/prompts/my-app-plan-feature.prompt.md'));
  assert.ok(g.files.some(f=>f.path==='.github/instructions/my-app-components.instructions.md'));
  const orch=g.files.find(f=>f.path==='.github/agents/my-app-orchestrator.agent.md');
@@ -69,7 +69,7 @@ test('design, tracker, Sonar and semantic domains add only those agents',async t
  const manifest=JSON.parse(fs.readFileSync(path.join(r,'.repoweave/manifest.json'),'utf8'));
  assert.equal(manifest.files['.repoweave/semantic.json'],undefined);
  put(r,'.repoweave/semantic.json',example.replace('"version": 1','"version": 1, "extra": true'));
- assert.throws(()=>generate(await scan(r),{root:r}),/invalid/);
+ const broken=await scan(r);assert.throws(()=>generate(broken,{root:r}),/invalid/);
 });
 test('an earlier rw agent file is retained and not deleted',async t=>{
  const r=app(t,{name:'demo'});

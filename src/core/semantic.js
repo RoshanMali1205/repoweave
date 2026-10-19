@@ -62,25 +62,25 @@ const cell=s=>clean(s??'');
 const table=(head,rows)=>rows?.length?block('| '+head.map(h=>h[0]).join(' | ')+' |\n|'+head.map(()=>'---').join('|')+'|\n'+rows.map(r=>'| '+head.map(h=>cell(r[h[1]])).join(' | ')+' |').join('\n')):null;
 const bullets=(l,f=x=>clean(x))=>l?.length?block(l.map(x=>'- '+f(x)).join('\n')):null;
 const code=p=>'`'+String(p).replace(/[\u0000-\u0008\u000b-\u001f\u007f`|<>]/g,'').trim()+'`';
-const text=v=>v?clean(v):null;
+const plain=v=>v?clean(v):null;
 function domainContext(d){
- return {slug:d.slug,name:clean(d.name),triggers:(d.triggers||[]).map(clean),overview:clean(d.overview),sourceOfTruth:d.sourceOfTruth||null,architecture:text(d.architecture),
+ return {slug:d.slug,name:clean(d.name),triggers:(d.triggers||[]).map(clean),overview:clean(d.overview),sourceOfTruth:d.sourceOfTruth||null,architecture:plain(d.architecture),
   keyFiles:bullets(d.keyFiles,code),acceptanceCriteria:d.acceptanceCriteria?.length?block(d.acceptanceCriteria.map((x,i)=>(i+1)+'. '+clean(x)).join('\n')):null,
-  constraints:bullets(d.constraints),designLink:d.designLink||null,translationKeys:(d.translationKeys||[]).map(clean),tests:text(d.tests)};
+  constraints:bullets(d.constraints),designLink:d.designLink||null,translationKeys:(d.translationKeys||[]).map(clean),tests:plain(d.tests)};
 }
 // Maps semantic.json onto the semantic.* placeholders documented in resources/templates/CONTRACT.md.
 function context(data){
  if(!data)return {};const d=data,b=d.branding||{};
- return {architecture:{summary:text(d.architecture?.summary)},
-  conventions:{list:bullets(d.conventions?.list),naming:text(d.conventions?.naming),lineLength:d.conventions?.lineLength??null,rxjs:text(d.conventions?.rxjs)},
-  ui:{precedence:text(d.ui?.precedence),mapping:table([['Need','need'],['Use','use'],['Not','avoid']],d.ui?.mapping),sharedComponents:table([['Component','name'],['Use for','use']],d.ui?.sharedComponents),icons:text(d.ui?.icons)},
-  i18n:{pattern:text(d.i18n?.pattern),keyNaming:text(d.i18n?.keyNaming)},
-  services:{httpPattern:text(d.services?.httpPattern),coreServices:table([['Service','name'],['Responsibility','responsibility']],d.services?.coreServices),errorHandling:text(d.services?.errorHandling),caching:text(d.services?.caching)},
-  styles:{breakpoints:text(d.styles?.breakpoints),layoutOffsets:text(d.styles?.layoutOffsets),tokenImport:text(d.styles?.tokenImport)},
-  testing:{mockingStyle:text(d.testing?.mockingStyle),coverageTarget:text(d.testing?.coverageTarget),skipPatterns:(d.testing?.skipPatterns||[]).map(clean)},
+ return {architecture:{summary:plain(d.architecture?.summary)},
+  conventions:{list:bullets(d.conventions?.list),naming:plain(d.conventions?.naming),lineLength:d.conventions?.lineLength??null,rxjs:plain(d.conventions?.rxjs)},
+  ui:{precedence:plain(d.ui?.precedence),mapping:table([['Need','need'],['Use','use'],['Not','avoid']],d.ui?.mapping),sharedComponents:table([['Component','name'],['Use for','use']],d.ui?.sharedComponents),icons:plain(d.ui?.icons)},
+  i18n:{pattern:plain(d.i18n?.pattern),keyNaming:plain(d.i18n?.keyNaming)},
+  services:{httpPattern:plain(d.services?.httpPattern),coreServices:table([['Service','name'],['Responsibility','responsibility']],d.services?.coreServices),errorHandling:plain(d.services?.errorHandling),caching:plain(d.services?.caching)},
+  styles:{breakpoints:plain(d.styles?.breakpoints),layoutOffsets:plain(d.styles?.layoutOffsets),tokenImport:plain(d.styles?.tokenImport)},
+  testing:{mockingStyle:plain(d.testing?.mockingStyle),coverageTarget:plain(d.testing?.coverageTarget),skipPatterns:(d.testing?.skipPatterns||[]).map(clean)},
   migrations:bullets(d.migrations,m=>code(m.path)+(m.plan?' — plan '+code(m.plan):'')+(m.notes?': '+clean(m.notes):'')),
-  docs:{designDocDir:d.docs?.designDocDir||null,syncRule:text(d.docs?.syncRule)},
-  branding:{source:text(b.source),fontFamily:text(b.fontFamily),palette:table([['Name','name'],['Value','value'],['Token','token'],['Usage','usage']],b.palette),typography:table([['Level','level'],['Size','size'],['Weight','weight'],['Line height','lineHeight'],['Colour','color'],['Usage','usage']],b.typography),components:table([['Component','component'],['Rule','rule']],b.components),notes:bullets(b.rules)},
+  docs:{designDocDir:d.docs?.designDocDir||null,syncRule:plain(d.docs?.syncRule)},
+  branding:{source:plain(b.source),fontFamily:plain(b.fontFamily),palette:table([['Name','name'],['Value','value'],['Token','token'],['Usage','usage']],b.palette),typography:table([['Level','level'],['Size','size'],['Weight','weight'],['Line height','lineHeight'],['Colour','color'],['Usage','usage']],b.typography),components:table([['Component','component'],['Rule','rule']],b.components),notes:bullets(b.rules)},
   domains:(d.domains||[]).map(domainContext)};
 }
 module.exports={file,limit,schema,validate,load,context,clean};

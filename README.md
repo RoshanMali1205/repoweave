@@ -12,13 +12,14 @@ Coding assistants such as GitHub Copilot, Claude Code and Codex work better when
 
 RepoWeave analyzes a repository locally and records what it finds in an evidence profile. From that profile it deterministically generates a complete baseline harness of agents, skills, scoped rules, task prompts and shared context files for the coding hosts you select. Every write goes through a preview, conflict detection and a guarded, journaled apply step, so existing instructions and hand-edited files are never silently overwritten.
 
-RepoWeave is deliberately honest about what static analysis can establish. Business behavior, team precedence and real data flows still need a semantic review. For that step, RepoWeave generates a bootstrap workflow and an `rw-harness-builder` agent that guide your coding assistant through a source-grounded architecture review. RepoWeave itself does not run a background service or autonomous model workers.
+RepoWeave is deliberately honest about what static analysis can establish. Business behavior, team precedence and real data flows still need a semantic review. For that step, RepoWeave generates a bootstrap workflow and a harness-builder agent. The agent writes `.repoweave/semantic.json`; you then rerun Preview. RepoWeave never writes that file. It does not run a background service or autonomous model workers.
 
 ## Features
 
 - **Static repository analysis.** RepoWeave inventories first-party files, nested package manifests, Angular workspace and Nx project roots, JSONC configuration and local `tsconfig` inheritance. It resolves framework versions from npm (`package-lock.json`) and pnpm (`pnpm-lock.yaml`) lockfiles.
 - **TypeScript AST signals.** The TypeScript compiler API is used to parse JavaScript and TypeScript sources for imports, dynamic imports, Angular `@Component`, `@NgModule` and `@Injectable` metadata (including standalone flags and `providedIn` scope), bootstrap calls, lazy route signals (`loadComponent`, `loadChildren`), React hooks and `'use client'` directives.
-- **Per-project ownership.** Each source file belongs to the longest matching project root, so mixed and nested Angular/React projects keep separate profiles. Relative imports are resolved into import edges; unresolved aliases stay unresolved instead of being guessed.
+- **Per-project ownership.** Each source file belongs to the longest matching project root, so mixed and nested Angular/React projects keep separate profiles. Relative imports and local tsconfig `paths` / `baseUrl` aliases resolve into import edges. An alias with no local file stays unresolved. Package-based tsconfig `extends` is not followed.
+- **Routes and main files.** Angular route objects (`path` with `loadComponent`, `loadChildren`, `component` or `redirectTo`), React Router `<Route>` entries and Next `app/` or `pages/` files are recorded with evidence and confidence. Entry, root-route, app-config and most-imported files are identified the same way.
 - **No execution of project code.** Analysis never runs npm scripts, imported configuration modules, tests, Git checkouts or remote writes. Scripts are recorded as argument-array descriptors marked `not-run`, and their shell bodies are not copied into instructions.
 - **Deterministic generation.** The same profile and options always produce the same files, for one or more of Copilot, Claude Code and Codex, using each host's native agent and skill formats.
 - **Safe write model.** Preview with per-file diffs, hash-based conflict detection, managed blocks in root instruction files, backups, a transaction journal, a write lock and rollback on failure.
@@ -47,15 +48,15 @@ flowchart TD
 2. **Profile.** Findings are stored as an evidence profile with file paths, line numbers, coverage counts, omitted files and explicit unknowns.
 3. **Preview.** The generator produces the harness in memory. The writer compares each proposed file with what is on disk and the previous manifest, and marks each one as `create`, `update`, `unchanged` or `conflict`.
 4. **Apply.** If there are no conflicts and nothing has changed since the preview, the planned files are written.
-5. **Review.** Your coding host runs the generated `rw-harness-builder` agent or bootstrap skill to complete the semantic architecture review and refine the harness.
+5. **Review.** Your coding host runs the generated harness-builder agent. It writes `.repoweave/semantic.json`. Rerun Preview so feature agents and the remaining facts are regenerated from that file.
 
 The analysis stages and what each one can and cannot establish:
 
 | Stage | What it does | What it cannot establish alone |
 |---|---|---|
-| Static scan | File inventory, nested manifests, npm/pnpm resolved framework versions, JSONC and local tsconfig inheritance, Angular workspace roots, decorator metadata, provider scopes, imports, lazy-route signals, React client directives, styles and tooling | Business behavior, library precedence, whether every route really loads lazily, complete API data flow |
+| Static scan | File inventory, nested manifests, npm/pnpm resolved framework versions, JSONC and local tsconfig inheritance, path aliases, Angular and React/Next route entries, main files, decorator metadata, provider scopes, styles and tooling | Business behavior, library precedence, whether every route really loads lazily, complete API data flow |
 | Optional AI review | Sends explicitly selected and reviewed files to a model exposed through VS Code and accepts only observations with valid evidence paths | Whole-repository understanding from a small sample, or guaranteed correct findings |
-| Host architecture review | The generated `rw-harness-builder` agent and `rw-bootstrap` skill guide the coding assistant through all first-party areas, real flows, conventions and exceptions | Automatic certification; findings still need project validation |
+| Host architecture review | The generated harness-builder agent and bootstrap skill guide the coding assistant through all first-party areas. Findings go into `.repoweave/semantic.json`, which RepoWeave only reads | Automatic certification; findings still need project validation |
 
 ## Supported targets
 
@@ -63,9 +64,11 @@ Shared context always lives under `.repoweave/`. Each selected host additionally
 
 | Target | Agents | Skills (single target) | Rules and instructions |
 |---|---|---|---|
-| GitHub Copilot | `.github/agents/rw-*.agent.md` | `.github/skills/rw-*/SKILL.md` | `.github/copilot-instructions.md` and scoped `.github/instructions/rw-*.instructions.md`; prompt files in `.github/prompts/rw-*.prompt.md` |
-| Claude Code | `.claude/agents/rw-*.md` | `.claude/skills/rw-*/SKILL.md` | `CLAUDE.md` and scoped `.claude/rules/rw-*.md` |
-| Codex | `.codex/agents/rw-*.toml` | `.agents/skills/rw-*/SKILL.md` | `AGENTS.md`, which links the shared context; per-project rules are linked from `.repoweave/architecture.md`. No files are written inside application directories. |
+| GitHub Copilot | `.github/agents/{prefix}-*.agent.md` | `.github/skills/{prefix}-*/SKILL.md` | `.github/copilot-instructions.md` and scoped `.github/instructions/{prefix}-*.instructions.md`; prompt files in `.github/prompts/{prefix}-*.prompt.md` |
+| Claude Code | `.claude/agents/{prefix}-*.md` | `.claude/skills/{prefix}-*/SKILL.md` | `CLAUDE.md` and scoped `.claude/rules/{prefix}-*.md` with a `paths` list |
+| Codex | `.codex/agents/{prefix}-*.toml` | `.agents/skills/{prefix}-*/SKILL.md` | `AGENTS.md`, which links the shared context; per-project rules are linked from `.repoweave/architecture.md`. No files are written inside application directories. |
+
+`{prefix}` comes from the root `package.json` `name` (scope stripped, kebab-case, safe characters, at most 40 characters), otherwise the folder name, otherwise `project`. Override it with `--prefix` or `repoweave.agentPrefix`. An empty setting derives the prefix. A value that would make an unsafe path is rejected. Files from an earlier `rw-*` harness are retained, not deleted.
 
 When more than one target is selected, skills are written to a single shared location to avoid duplicate names: `.agents/skills/` if Codex is among the targets, otherwise `.claude/skills/`. Each root instruction file links those skill files explicitly. Some clients do not automatically discover another client's skill directory, so in that case follow the linked files. For the cleanest native discovery, select only the host you actively use.
 
@@ -78,6 +81,7 @@ The shared `.repoweave/` folder contains:
 - `rules/<project-id>.md`, per-project rules derived from the profile.
 - `harness.md`, `scan-contract.md`, `BOOTSTRAP.md` and `integrations.md`, the delivery harness, discovery contract, bootstrap workflow and MCP onboarding guide.
 - `catalog.md`, `SETUP.md` and `integration-status.json`.
+- `semantic.schema.json` and `semantic.example.json`. `semantic.json` is yours; Preview and Apply never create or replace it, and it is not listed in the manifest.
 - `prompts/*.md`, plain task prompts for hosts that do not load Copilot prompt files.
 - `ai-observations.json`, only when an AI review was run.
 - `scripts/freshness.cjs`, only when hooks are enabled.
@@ -85,45 +89,34 @@ The shared `.repoweave/` folder contains:
 
 ## Generated agents and skills
 
-The following agents are always generated:
+Names below use `{prefix}`. These agents are always generated. The orchestrator lists exactly this set, plus any conditional agents that were actually emitted.
 
 | Agent | Purpose | Tool access |
 |---|---|---|
-| `rw-orchestrator` | Coordinates scoped delivery and evidence-based handoffs | Full; can delegate to the other agents on Copilot |
-| `rw-planner` | Plans a feature against repository architecture | Read-only |
-| `rw-implementer` | Implements scoped application changes following local patterns | Full |
-| `rw-ui-specialist` | Implements scoped styling and responsive behavior | Full |
-| `rw-test-generator` | Creates missing behavior-focused tests | Full |
-| `rw-test-fixer` | Repairs existing tests from observed failures | Full |
-| `rw-reviewer` | Reviews a stable diff for correctness and regression risk | Read-only |
-| `rw-researcher` | Maps architecture and resolves dependency questions | Read-only |
-| `rw-defect-analyst` | Investigates a reported defect and its shared impact | Read-only |
-| `rw-pr-reviewer` | Reviews a branch or pull-request diff | Read-only |
-| `rw-harness-builder` | Analyzes architecture and refines the generated harness | Full |
+| `{prefix}-orchestrator` | Coordinates scoped delivery and evidence-based handoffs | Full; can delegate to the other generated agents on Copilot |
+| `{prefix}-planner` | Plans a feature against repository architecture | Read-only |
+| `{prefix}-researcher` | Maps architecture and resolves dependency questions. Starts a defect investigation | Read-only |
+| `{prefix}-implementer` | Implements scoped application changes following local patterns | Full |
+| `{prefix}-ui-specialist` | Implements scoped styling and responsive behavior | Full |
+| `{prefix}-test-generator` | Creates missing behavior-focused tests | Full |
+| `{prefix}-test-fixer` | Repairs existing tests from observed failures | Full |
+| `{prefix}-reviewer` | Reviews a working-tree diff or a pull request. Does not merge | Read-only |
+| `{prefix}-harness-builder` | Records the semantic review in `.repoweave/semantic.json` | Full |
 
-Two optional agents are added when integration preferences are selected:
+A defect follows researcher, then implementer or test-fixer, then reviewer. There is no defect-analyst agent and no separate pull-request agent.
 
 | Agent | Added when | Purpose |
 |---|---|---|
-| `rw-integration-specialist` | Azure DevOps or Jira is selected | Resolves optional tracker and design context |
-| `rw-design-reviewer` | Figma is selected | Compares an implementation against a supplied design (read-only) |
+| `{prefix}-integration-specialist` | Azure DevOps or Jira is requested | Resolves tracker context |
+| `{prefix}-design-reviewer` | Figma is requested or a Figma hint is detected | Compares an implementation against a supplied design (read-only) |
+| `{prefix}-a11y-label-fixer` | Sonar is detected | Fixes inputs that lack an accessible label |
+| `{prefix}-feature-{slug}` | One entry in `.repoweave/semantic.json` `domains` | Specialist for that feature |
 
-Read-only roles are restricted to read and search tools on Copilot and Claude Code, and request a read-only sandbox on Codex. Enforcement belongs to the host; a Markdown instruction is not an operating-system permission boundary. No model is pinned, so model choice is inherited from the host.
+Read-only roles drop edit and execute tools. On Claude those roles receive Read, Glob and Grep. On Codex they request a read-only sandbox. Enforcement belongs to the host. No model is pinned.
 
-Eight task skills are generated:
+Skills are rendered from `resources/templates/skills/`. The design-compliance skill is included only with the design reviewer. The others are always included: architecture discovery, bootstrap, deliver, design document, MCP onboard, missing tests, quality review, scaffold, system refresh, test run and test triage.
 
-| Skill | Purpose |
-|---|---|
-| `rw-architecture-discovery` | Inspect repository architecture before project-specific generation |
-| `rw-bootstrap` | Review repository architecture and complete or refine the generated harness |
-| `rw-deliver` | Deliver a feature or defect using the project harness |
-| `rw-scaffold` | Create a component or feature matching the target package |
-| `rw-test-run` | Execute the relevant configured tests and report failures |
-| `rw-quality-review` | Review changed code against local quality rules |
-| `rw-system-refresh` | Refresh generated agent knowledge after architecture changes |
-| `rw-mcp-onboard` | Connect optional tracker or design context when requested |
-
-Five task prompts are also generated: plan a feature, deliver a feature, review changes, generate missing tests and bootstrap the harness.
+Task prompts cover planning, delivery, missing tests, failing tests, change review, a codebase audit, a design document and the semantic review. Bodies come from the templates, not from a role catalog.
 
 ## Installation
 
@@ -143,7 +136,7 @@ The publisher id `roshan-mali-local` is a local packaging identifier, not a regi
 2. Choose **Analyze** and review the architecture evidence report.
 3. Choose **Preview files**. A summary of proposed changes opens, and you can pick any file to view a before/after diff.
 4. Choose **Apply preview** and confirm.
-5. Choose **Copy architecture prompt** and paste it into your coding assistant to run the source-grounded semantic review with `rw-harness-builder`.
+5. Choose **Copy architecture prompt** and paste it into your coding assistant. After it writes `.repoweave/semantic.json`, run Preview again.
 
 If the custom agent list does not refresh after Apply, reload the coding client.
 
@@ -185,7 +178,8 @@ Options:
 - `--project PATH` selects the repository. It defaults to the current directory.
 - `--target` accepts `copilot` (the default), `claude`, `codex`, `all`, or a comma-separated list such as `copilot,claude`.
 - `--hooks` includes the read-only freshness hook.
-- `--integrations` accepts a comma-separated list of `azure`, `jira` and `figma`.
+- `--integrations` accepts a comma-separated list of `azure`, `jira` and `figma`. Azure or Jira adds the tracker specialist. Figma adds the design reviewer.
+- `--prefix SLUG` overrides the derived agent-name prefix. An empty `repoweave.agentPrefix` setting derives it.
 - `--yes` confirms `apply`.
 
 Examples:
@@ -216,6 +210,7 @@ A folder of Markdown alone is not a running extension or daemon. The generator m
 | `repoweave.targets` | `["copilot"]` | One or more of `copilot`, `claude` and `codex`. Multi-client output uses shared skills to avoid duplicate discovery. |
 | `repoweave.includeHooks` | `false` | Adds a read-only SessionStart profile-freshness hook. It is written to `.claude/settings.json` when Claude is a target, otherwise to `.github/hooks/repoweave.json` when Copilot is a target. No Codex hook configuration is emitted. The hook runs no application scripts, makes no network calls and does not write to the workspace. An existing `.claude/settings.json` produces a merge conflict instead of being overwritten. |
 | `repoweave.maxSourceFiles` | `4000` | Maximum first-party source files analyzed per scan, between 1 and 20,000. Omitted files are listed in the report. |
+| `repoweave.agentPrefix` | empty | Prefix for generated names. Empty derives it from the root package name, then the folder name, then `project`. |
 
 Fixed scan budgets also apply. The total inventory is capped at 50,000 files, individual source reads at 512 KiB, and source-content scanning at approximately 32 MiB.
 
@@ -225,7 +220,7 @@ Fixed scan budgets also apply. The total inventory is capped at 50,000 files, in
 - **Conflict detection.** Generated files are tracked by content hash in `.repoweave/manifest.json`. A file that RepoWeave did not create, or that was edited after generation, becomes a conflict, and Apply stops before writing anything. A managed root block that was changed outside RepoWeave is also a conflict.
 - **Drift checks.** Apply rechecks the hashes of scanned inputs, every destination file and the manifest. Any change since the preview invalidates the plan. In VS Code, unsaved editor buffers for affected files also block Apply.
 - **Guarded writes.** Apply takes a lock at `.repoweave/write.lock`, backs up prior content and writes a transaction journal under `.repoweave/backups/`, writes each file through a temporary sibling and rename, and writes the manifest last. A failure during Apply rolls back the completed writes.
-- **Path safety.** Paths outside the workspace and symlinked paths are rejected. Common secret files such as `.env`, `.npmrc` and private keys are excluded from the inventory.
+- **Path safety.** Paths outside the workspace and symlinked paths are rejected. Real secret files are excluded from the inventory: `.env*`, `.npmrc`, `.netrc`, `.git-credentials`, private keys, certificates and keystores. First-party source such as `credentials.service.ts` or a `secrets` model is inventoried. AI context is still redacted.
 - **AI boundaries.** AI review is optional and user-initiated. You select the files, inspect the redacted context, and choose a model. Context is limited to 60,000 characters, and redaction is heuristic, not a guarantee. RepoWeave stores no API keys. Observations cannot execute commands or replace files.
 - **Refresh.** Run Analyze and Preview again after project changes. Unchanged generated files are updated, and user-edited files are surfaced as conflicts.
 
@@ -240,15 +235,18 @@ repoweave/
 │   ├── extension.js        Workspace trust and selection, studio panel, commands, diffs, AI consent
 │   └── core/
 │       ├── fs.js           Path boundaries, symlink policy, inventory, ignore handling, redaction
-│       ├── scanner.js      Manifests, config inheritance, npm/pnpm versions, AST signals, ownership, import edges
-│       ├── generator.js    Shared context, native host files, role and skill catalogs, hook opt-in
+│       ├── scanner.js      Manifests, aliases, routes, main files, stack facts, ownership
+│       ├── template.js     Placeholder renderer and profile context
+│       ├── semantic.js     Read-only loader and schema for semantic.json
+│       ├── prefix.js       Agent-name prefix
+│       ├── generator.js    Template-backed host files and hook opt-in
 │       ├── writer.js       Preview, conflict checks, managed blocks, validation, journaled apply and rollback
 │       └── ai.js           Bounded selected-file context, prompt and evidence checks for AI observations
 ├── scripts/
 │   └── cli.js              Portable CLI using the same engine
 ├── resources/
-│   ├── roles.json          Agent definitions
-│   ├── skills.json         Task skill definitions
+│   ├── templates/          Parameterised agents, skills, prompts and instructions
+│   ├── semantic.example.json
 │   ├── harness.md          Delivery harness: routes, handoffs, ownership, gates, bounded repair
 │   ├── BOOTSTRAP.md        Host-driven architecture review workflow
 │   ├── scan-contract.md    Repository discovery contract
@@ -270,7 +268,7 @@ npm run package
 ```
 
 - `npm test` runs the Node test suite in `test/`, which covers the core engine and the Analyze, Preview and Apply workflow against a mocked VS Code API.
-- `npm run check` performs a syntax check of `src/extension.js`.
+- `npm run check` performs a syntax check of the extension, core modules and CLI.
 - `npm run package` builds the VSIX with `vsce`.
 
 Press F5 in this source project to start an Extension Development Host using `.vscode/launch.json`.
@@ -282,7 +280,7 @@ Before any public release, choose a publisher you own, confirm the product name,
 - RepoWeave is a local preview. It has not been published, and real VS Code, Copilot, Claude Code and Codex discovery has not yet been verified end to end. The extension test uses a mocked VS Code API.
 - There is no background daemon or independent multi-agent scheduler. Agent execution is supplied by the coding host.
 - Static analysis does not establish complete business understanding. Semantic review is still needed, and the AI review covers only the files you select.
-- TypeScript path aliases are listed from configuration but not resolved in the import graph. Package-based `tsconfig` inheritance, decorator namespace imports and complex computed metadata may stay unresolved. Angular implicit standalone behavior is only inferred when the Angular version is resolved from a lockfile.
+- Local tsconfig `paths` and `baseUrl` aliases are resolved. Package-based `tsconfig` inheritance, decorator namespace imports and complex computed metadata may stay unresolved. Angular implicit standalone behavior is only inferred when the Angular version is resolved from a lockfile. Semantic facts stay unknown until `.repoweave/semantic.json` exists.
 - Hooks are preview features in some hosts, and no Codex hook configuration is emitted in this version.
 - MCP connections and authentication happen in the host. There is no built-in Jira, Azure DevOps or Figma client.
 - Existing Claude settings need a manual hook merge, and conflicts need deliberate resolution. Automated crash recovery and removal of obsolete target files are not implemented.

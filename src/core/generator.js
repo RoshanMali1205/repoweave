@@ -135,7 +135,7 @@ function generate(profile,options={}){
  const active=[...AGENTS.filter(a=>!a.when||(a.when==='design'&&designOn)||(a.when==='tracker'&&trackerOn)||(a.when==='sonar'&&sonarOn)),...domains.map(d=>({id:'feature-'+d.slug,domain:d,template:'feature-domain'}))];
  const featureNames=domains.map(d=>names('feature-'+d.slug));
  const specialist=[names('researcher'),names('harness-builder'),trackerOn&&names('integration-specialist'),sonarOn&&names('a11y-label-fixer')].filter(Boolean);
- const repoExtra={prefix,hasTracker:trackerOn,tracker:trackerOn?trackerName:null,hasDesignTool:designOn,designTool:designOn?'Figma':null,hasLabelFixer:sonarOn,specialistAgents:specialist.join(', '),featureAgents};
+ const repoExtra={prefix,hasTracker:trackerOn,tracker:trackerOn?trackerName:null,hasDesignTool:designOn,designTool:designOn?'Figma':null,hasLabelFixer:sonarOn,specialistAgents:specialist.join(', '),featureAgents:featureNames};
  const contextFor=(project,domain)=>projectContext(profile,project,domain?{...semCtx,domain}:semCtx,repoExtra);
  const primaryCtx=contextFor(primary);
  const files=[];const add=(p,content,refs=[],kind='file')=>{if(p==='.repoweave/semantic.json'||p.includes('..')||p.includes('\\'))throw Error('Refusing generated path: '+p);files.push({path:p,content,refs,kind});};

@@ -26,17 +26,19 @@ The loop at the bottom is executed by the coding host under the generated harnes
 |---|---|
 | `src/extension.js` | Workspace selection/trust, studio, commands, preview diffs, model selection and consent |
 | `src/core/fs.js` | Path boundaries, no-symlink policy, inventory, ignore handling and heuristic redaction |
-| `src/core/scanner.js` | Manifests, local config inheritance, npm/pnpm framework versions, AST signals, package ownership, import edges and per-project `stack` facts (test runner, specs, lint, Sonar, i18n, UI libraries, styling, tokens, Angular builders) |
-| `src/core/template.js` | Pure placeholder/conditional renderer and profile-to-placeholder context for `resources/templates/` (not yet used by the generator) |
-| `src/core/generator.js` | Canonical context, native client files, role and skill catalogs, hook opt-in |
+| `src/core/scanner.js` | Manifests, local config inheritance, npm/pnpm framework versions, AST signals, package ownership, import edges (relative, tsconfig `paths` and `baseUrl`), route and main-file facts, and per-project `stack` facts |
+| `src/core/template.js` | Placeholder renderer and profile-to-placeholder context. `generate()` renders `resources/templates/` |
+| `src/core/semantic.js` | Loads optional `.repoweave/semantic.json`, validates it, and escapes its text. RepoWeave never writes that file |
+| `src/core/prefix.js` | Derives and checks the agent-name prefix |
+| `src/core/generator.js` | Template-backed agents, skills, instructions and prompts for Copilot, Claude and Codex, plus hook opt-in |
 | `src/core/writer.js` | Preview, ownership checks, managed blocks, syntax/reference validation, journaled apply and rollback |
 | `src/core/ai.js` | Bounded selected context, prompt and schema/evidence checks on AI observations |
-| `resources/` | Reusable role, task, architecture review and delivery harness content; `resources/templates/` holds parameterised agent, instruction, prompt and skill templates with their `CONTRACT.md` |
+| `resources/` | Architecture review and delivery harness content. `resources/templates/` supplies the agent, skill, prompt and instruction bodies |
 | `scripts/cli.js` | Same scan/generate/write engine outside VS Code |
 
 ## Ownership model
 
-Each source file belongs to the longest matching project root. Nested Angular/React projects retain their own profiles. Configuration packages may declare tooling used by several applications; a declaration is distinct from a source import. Local relative imports are resolved into edges; unresolved aliases remain unresolved instead of being guessed.
+Each source file belongs to the longest matching project root. Nested Angular/React projects retain their own profiles. Configuration packages may declare tooling used by several applications; a declaration is distinct from a source import. Relative imports and local tsconfig `paths` / `baseUrl` aliases resolve into edges. An alias that does not match a local file stays unresolved. Package-based tsconfig `extends` is not followed.
 
 ## Write model
 
