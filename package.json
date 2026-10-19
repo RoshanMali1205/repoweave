@@ -3,8 +3,8 @@
   "displayName": "RepoWeave — Agent Harness Studio",
   "description": "Generate repository-aware agent harnesses (agents, skills, instructions, prompts) for GitHub Copilot, Claude Code and Codex from Angular and React projects — with one command.",
   "version": "0.1.1",
-  "publisher": "roshan-mali-local",
-  "license": "SEE LICENSE IN LICENSE",
+  "publisher": "roshanmali",
+  "license": "MIT",
   "icon": "resources/images/icon.png",
   "galleryBanner": {
     "color": "#0f172a",

@@ -136,7 +136,7 @@ RepoWeave is distributed as a VSIX file for local installation. It requires VS C
 
 No project dependency installation is needed to use the VSIX, because the extension bundles its scanner libraries. Node.js on `PATH` is needed only for the optional freshness hook and the standalone CLI.
 
-The publisher id `roshan-mali-local` is a local packaging identifier, not a registered Marketplace account. Nothing has been published to the Marketplace.
+The publisher id is `roshanmali`. The extension has not been published to the Marketplace yet.
 
 ## Usage in VS Code
 
@@ -282,7 +282,7 @@ npm run package
 
 Press F5 in this source project to start an Extension Development Host using `.vscode/launch.json`.
 
-Before any public release, choose a publisher you own, confirm the product name, add repository and support metadata, choose a distribution license and complete real editor testing.
+Before any public release, choose a publisher you own, confirm the product name and complete real editor testing.
 
 ## Limitations and roadmap
 
@@ -311,6 +311,4 @@ RepoWeave is created and maintained by **Roshan Mali**.
 
 ## License
 
-Copyright (c) 2026 Roshan Mali. All rights reserved.
-
-This preview is supplied for the owner's evaluation and development and is not released under an open-source license. A distribution license will be chosen before public release. Third-party dependencies retain their respective licenses. See [LICENSE](LICENSE).
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Roshan Mali. Third-party dependencies retain their respective licenses.
