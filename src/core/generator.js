@@ -9,7 +9,7 @@ const templateRoot=path.join(resources,'templates');
 const canonical=['.repoweave/profile.json','.repoweave/architecture.md','.repoweave/harness.md'];
 const json=x=>JSON.stringify(x,null,2)+'\n';
 const readRes=f=>fs.readFileSync(path.join(resources,f),'utf8');
-const readTpl=f=>fs.readFileSync(path.join(templateRoot,f),'utf8');
+const readTpl=f=>fs.readFileSync(path.join(templateRoot,f),'utf8').replace(/\r\n/g,'\n');
 const cell=x=>String(x??'unknown').replace(/[\n\r|<>]/g,' ');
 const links=(from,refs)=>'\n\n## Required context\n\n'+refs.map(r=>'- ['+r+']('+path.posix.relative(path.posix.dirname(from),r)+')').join('\n')+'\n';
 const TARGETS=['copilot','claude','codex'];

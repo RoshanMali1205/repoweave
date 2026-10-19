@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),os=require(
 // Keep fixtures independent of any repository that encloses the temp directory (for example a home-directory repo).
 process.env.GIT_CEILING_DIRECTORIES=os.tmpdir();
 const {fs,path,safe,inventory}=require('../src/core/fs');const {scan}=require('../src/core/scanner');
-function temp(t){const d=fs.mkdtempSync(path.join(os.tmpdir(),'repoweave-'));t.after(()=>fs.rmSync(d,{recursive:true,force:true}));return d;}
+function temp(t){const d=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'repoweave-'));t.after(()=>fs.rmSync(d,{recursive:true,force:true}));return d;}
 function put(r,p,v){fs.mkdirSync(path.dirname(path.join(r,p)),{recursive:true});fs.writeFileSync(path.join(r,p),typeof v==='string'?v:JSON.stringify(v));}
 const git=(...a)=>cp.execFileSync('git',a,{stdio:'ignore'});
 
