@@ -165,6 +165,7 @@ async function scan(projectRoot, options={}) {
  const inDegree=new Map();for(const e of edges)if(e.to&&e.to!==e.from)inDegree.set(e.to,(inDegree.get(e.to)||0)+1);
  const specRE=/\.(?:spec|test)\.[cm]?[jt]sx?$/;
  function routesAndMain(u,own,ownFiles,deps){
+  own=own.filter(s=>!specRE.test(s.file));ownFiles=ownFiles.filter(f=>!specRE.test(f)); // spec files are not routes, entry points or app config
   const rel=f=>u.root?f.slice(u.root.length+1):f;
   const tree=own.flatMap(s=>s.routeDefs.map(r=>{const t=r.specifier?resolveImport(s.file,r.specifier)?.to||null:null;return {...r,file:s.file,...(r.specifier?{targetFile:t}:{})};}));
   if(deps.next)for(const f of ownFiles){const m=/^(?:src\/)?app\/(?:(.*)\/)?page\.[jt]sx?$/.exec(rel(f))||/^(?:src\/)?pages\/(?!api\/|_)(.*?)(?:\/index)?\.[jt]sx?$/.exec(rel(f));if(m&&!specRE.test(f))tree.push({path:'/'+(m[1]||'').split('/').filter(x=>x&&!/^\(.*\)$/.test(x)).join('/'),kind:'file',file:f,line:1});}

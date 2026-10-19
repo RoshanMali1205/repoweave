@@ -213,7 +213,13 @@ function generate(profile,options={}){
  }
  for(const p of profile.projects.filter(p=>p.sourceFiles))add('.repoweave/rules/'+p.id+'.md',projectRules(p),canonical);
  const rulePaths=files.filter(f=>f.path.startsWith('.repoweave/rules/')).map(f=>f.path);
- const rootBody=scoped.map(p=>renderTemplate(readTpl('root/project.instructions.md'),contextFor(p)).trim()).join('\n\n');
+ // The primary project gets the full root template; other projects get a short factual section so unrelated stacks do not repeat it.
+ const secondaryRoot=p=>{
+  const fw=p.frameworks.map(f=>cell(f.package+' '+(f.resolved||f.declared))).join(', ');
+  const cmds=p.commands.slice(0,8).map(c=>'| `'+cell(c.argv?c.argv.join(' '):'script: '+c.name)+'` | `'+cell(c.cwd||'.')+'` |');
+  return '## Additional project: `'+cell(p.root)+'`\n\nManifest: `'+cell(p.manifest)+'`. '+p.sourceFiles+' source files'+(fw?'. Frameworks: '+fw:'')+'. Scoped rules: `.repoweave/rules/'+p.id+'.md`. Details that static analysis did not establish are left to the semantic review.'+(cmds.length?'\n\n| Command | Run from |\n|---|---|\n'+cmds.join('\n'):'');
+ };
+ const rootBody=scoped.map(p=>p===primary||scoped.length===1?renderTemplate(readTpl('root/project.instructions.md'),contextFor(p)).trim():secondaryRoot(p)).join('\n\n');
  for(const t of targets){
   const root=t==='copilot'?'.github/copilot-instructions.md':t==='claude'?'CLAUDE.md':'AGENTS.md';
   const refs=canonical.concat(['.repoweave/BOOTSTRAP.md','.repoweave/AUTHORING-STANDARD.md',...skillPaths]);

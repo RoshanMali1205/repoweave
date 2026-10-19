@@ -99,6 +99,7 @@ A UI entry is `used` when it is imported from source, referenced in build styles
 | Placeholder | profile.json source | Scanner | Fallback |
 |---|---|---|---|
 | `project.i18n.library` | first of `stack.i18n.value.libraries` | ✓ new | note |
+| `project.i18n.hasI18n` | `stack.i18n.value.libraries` or resource files present | ✓ | false |
 | `project.i18n.resourceDirs` | `stack.i18n.value.resourceDirs` (`i18n/`, `locale(s)/`, `translations/`… JSON/XLIFF/PO/ARB) | ✓ new | omitted |
 | `project.state.libraries` | `tooling.state` | ✓ | `none detected` |
 
@@ -109,7 +110,7 @@ A UI entry is `used` when it is imported from source, referenced in build styles
 | Placeholder | profile.json source | Scanner | Fallback |
 |---|---|---|---|
 | `project.testing.runner` | `stack.testing.value.runner`: test builder → `karma.conf.*`/`jest.config.*`/`vitest.config.*`/`vite.config.*` with `test:` → declared package | ✓ new | else: stop and ask |
-| `project.testing.framework` | Jasmine/Mocha for Karma (from packages), else the runner | ✓ new | omitted |
+| `project.testing.framework` | Jasmine/Mocha for Karma (from packages); omitted when it would repeat the runner | ✓ new | omitted |
 | `project.testing.configFiles` | `stack.testing.value.configFiles` | ✓ new | `none detected` |
 | `project.testing.libraries` | `stack.testLibraries.value` | ✓ new | `none detected` |
 | `project.testing.specSuffix` / `.specGlob` | dominant `stack.specs.value.suffixes` (e2e folders excluded) | ✓ new | else: generic globs |

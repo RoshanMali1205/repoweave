@@ -91,3 +91,19 @@ test('shipped semantic example matches the schema',()=>{
  assert.equal(semantic.validate(example).version,1);
  assert.equal(semantic.schema().properties.version.enum[0],1);
 });
+test('spec files are not routes, and the root file stays compact for extra projects',async t=>{
+ const r=temp(t);
+ put(r,'package.json',{name:'web',dependencies:{'@angular/core':'^20.0.0','@angular/router':'^20.0.0'},devDependencies:{vitest:'^3.0.0'}});
+ put(r,'src/app/app.routes.ts',"import {Routes} from '@angular/router';\nexport const routes: Routes = [{path:'home',loadComponent:()=>import('./home').then(m=>m.Home)}];");
+ put(r,'src/app/app.routes.spec.ts',"export const stub = [{path:'only-in-spec',component: X}];");
+ put(r,'src/app/home.ts','export class Home {}');
+ put(r,'tools/package.json',{name:'web-tools',scripts:{start:'node index.js'}});
+ put(r,'tools/src/index.ts','export const a = 1;');
+ const profile=await scan(r),g=generate(profile,{targets:['copilot']});
+ const text=g.files.find(f=>f.path==='.github/copilot-instructions.md').content;
+ assert(!text.includes('only-in-spec'),'spec route leaked');
+ assert(text.includes('## Additional project: `tools`'));
+ assert(!/## Tech stack[\s\S]*## Tech stack/.test(text),'full template repeated for second project');
+ assert(!text.includes('translation mechanism'),'translation rule without i18n');
+ assert(!/Vitest(?: \(inferred; verify\))? with Vitest/.test(text),'runner repeated as framework');
+});

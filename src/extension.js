@@ -20,7 +20,7 @@ function render(root){
  studio.webview.html=`<!doctype html><html><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';"><meta name="viewport" content="width=device-width, initial-scale=1"><style nonce="${nonce}">
  body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);padding:26px;max-width:1100px;margin:auto;background:var(--vscode-editor-background)}h1{font-size:28px;margin-bottom:8px}p{line-height:1.6}.muted{color:var(--vscode-descriptionForeground)}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}button{border:1px solid var(--vscode-button-border,transparent);padding:10px 14px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);cursor:pointer;border-radius:4px}button:focus{outline:2px solid var(--vscode-focusBorder)}table{border-collapse:collapse;width:100%;margin-top:18px}td,th{text-align:left;padding:12px;border-bottom:1px solid var(--vscode-panel-border)}.pill{padding:6px 10px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);border-radius:4px;display:inline-block;margin:4px}.card{border:1px solid var(--vscode-panel-border);padding:18px;border-radius:6px;margin:18px 0}code{overflow-wrap:anywhere}ul{line-height:1.7}
  </style></head><body><p class="muted">PROJECT CONTEXT · AGENTS · VERIFICATION</p><h1>RepoWeave</h1><p>Build an agent harness that follows your repository.</p><p class="muted">${esc(root||'Choose a repository to begin.')}</p>
- <div class="buttons"><button data-action="scan">1. Analyze</button><button data-action="preview">2. Preview files</button><button data-action="apply">3. Apply preview</button><button data-action="enrich">AI review selected files</button><button data-action="bootstrap">Copy architecture prompt</button><button data-action="integrations">Integrations</button><button data-action="validate">Validate</button></div>
+ <div class="buttons"><button data-action="run">Generate harness (all steps)</button><button data-action="scan">1. Analyze</button><button data-action="preview">2. Preview files</button><button data-action="apply">3. Apply preview</button><button data-action="enrich">AI review selected files</button><button data-action="bootstrap">Copy architecture prompt</button><button data-action="integrations">Integrations</button><button data-action="validate">Validate</button></div>
  <p>${(opts.targets||[]).map(t=>'<span class="pill">'+esc(t)+'</span>').join('')} <span class="pill">Hooks ${opts.includeHooks?'requested':'off'}</span></p>
  <section class="card"><h2>Repository evidence</h2>${s.profile?`<p>${s.profile.coverage.analyzedSourceFiles} / ${s.profile.coverage.eligibleSourceFiles} eligible source files analyzed · ${s.profile.projects.length} project roots · semantic review ${esc(s.profile.coverage.semanticReview)}</p><table><thead><tr><th>Project</th><th>Frameworks</th><th>Styles</th><th>Tests declared</th></tr></thead><tbody>${s.profile.projects.map(p=>`<tr><td>${esc(p.root)}</td><td>${esc(p.frameworks.map(f=>f.package+' '+(f.resolved||f.declared)).join(', '))}</td><td>${esc(Object.keys(p.styles).join(', '))}</td><td>${esc(p.tooling.tests.map(t=>t.package).join(', '))}</td></tr>`).join('')}</tbody></table>`:'<p>Analyze reads configuration and source syntax. It never executes project scripts.</p>'}</section>
  <section class="card"><h2>Generation</h2>${s.plan?`<p>${s.plan.entries.filter(e=>e.status==='create').length} new · ${s.plan.entries.filter(e=>e.status==='update').length} updates · ${s.plan.entries.filter(e=>e.status==='conflict').length} conflicts · ${s.plan.retained.length} retained from prior targets</p>`:'<p>Preview creates the proposed agents, skills, instructions, prompts and harness in memory. Apply writes only that reviewed plan.</p>'}<p class="muted">Existing rules and modified generated files are protected. Generation uses deterministic templates; AI observations remain separately labeled suggestions.</p></section>
@@ -50,6 +50,17 @@ async function applyPreview(root){
  const dirty=vscode.workspace.textDocuments.some(d=>d.isDirty&&affected.has(path.relative(root,d.uri.fsPath).split(path.sep).join('/')));if(dirty)throw Error('Save or discard affected editor buffers, then analyze and preview again.');
  const result=apply(root,s.plan);s.plan=null;s.result=`Applied ${result.changed} files. Use the harness-builder agent to write .repoweave/semantic.json, then preview again.`;render(root);vscode.window.showInformationMessage(s.result);log.appendLine(JSON.stringify(result));
 }
+// One-click flow: analyze, build the plan, show it, ask once, apply, then validate. Conflicts or a cancelled confirmation stop it before any write.
+async function runAll(root){
+ const profile=await analyze(root),s=sessions.get(root);
+ s.plan=plan(root,generate(profile,{...settings(root),analysis:s.analysis,root}));render(root);
+ await document(previewSummary(s.plan));
+ await applyPreview(root);
+ if(sessions.get(root).plan)return;
+ const v=validateInstalled(root);
+ vscode.window.showInformationMessage(v.ok?`RepoWeave: harness generated and validated (${v.files} files).`:'RepoWeave: harness written but validation reported errors. See the RepoWeave output.');
+ if(!v.ok)log.appendLine(JSON.stringify(v));
+}
 async function enrich(root){
  const profile=await ensure(root);
  const eligible=profile.inventory.filter(f=>/\.(ts|tsx|js|jsx|mjs|cjs|html|scss|less|css|json|md)$/.test(f)&&!f.endsWith('package-lock.json')&&!f.startsWith('.repoweave/'));
@@ -74,7 +85,8 @@ async function dispatch(action,root){
  if(busy){vscode.window.showInformationMessage('RepoWeave is completing another operation.');return;}
  busy=true;try{
   root=root||await workspace();if(!root)return;if(!vscode.workspace.isTrusted)throw Error('Workspace must be trusted.');
-  if(action==='open'){if(!studio){studio=vscode.window.createWebviewPanel('repoweave','RepoWeave',vscode.ViewColumn.One,{enableScripts:true,retainContextWhenHidden:true,localResourceRoots:[]});studio.onDidDispose(()=>studio=undefined);studio.webview.onDidReceiveMessage(msg=>{if(['scan','preview','apply','enrich','bootstrap','integrations','validate'].includes(msg?.action))dispatch(msg.action,lastRoot).catch(report);});}lastRoot=root;render(root);studio.reveal();}
+  if(action==='open'){if(!studio){studio=vscode.window.createWebviewPanel('repoweave','RepoWeave',vscode.ViewColumn.One,{enableScripts:true,retainContextWhenHidden:true,localResourceRoots:[]});studio.onDidDispose(()=>studio=undefined);studio.webview.onDidReceiveMessage(msg=>{if(['run','scan','preview','apply','enrich','bootstrap','integrations','validate'].includes(msg?.action))dispatch(msg.action,lastRoot).catch(report);});}lastRoot=root;render(root);studio.reveal();}
+  else if(action==='run')await runAll(root);
   else if(action==='scan'){const p=await analyze(root);await document(architecture(p));}
   else if(action==='preview')await preview(root);
   else if(action==='apply')await applyPreview(root);
@@ -88,7 +100,7 @@ function report(e){log?.appendLine(e?.message||String(e));vscode.window.showErro
 function activate(context){
  log=vscode.window.createOutputChannel('RepoWeave');context.subscriptions.push(log);
  context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('repoweave-preview',{provideTextDocumentContent:uri=>virtual.get(uri.toString())||''}));
- for(const action of ['open','scan','preview','apply','enrich','bootstrap','validate','integrations'])context.subscriptions.push(vscode.commands.registerCommand('repoweave.'+action,()=>dispatch(action).catch(report)));
+ for(const action of ['open','run','scan','preview','apply','enrich','bootstrap','validate','integrations'])context.subscriptions.push(vscode.commands.registerCommand('repoweave.'+action,()=>dispatch(action).catch(report)));
  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e=>{if(e.affectsConfiguration('repoweave')){for(const s of sessions.values())s.plan=null;if(lastRoot)render(lastRoot);}}));
  const status=vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left,20);status.text='$(hubot) RepoWeave';status.command='repoweave.open';status.tooltip='Open Agent Harness Studio';status.show();context.subscriptions.push(status);
 }

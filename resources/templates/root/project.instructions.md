@@ -22,7 +22,7 @@ These are the root instructions. Path-scoped conventions live in the scoped inst
 {{/if}}
 | i18n | {{project.i18n.library}} | {{project.i18n.resourceDirs}} |
 | State | {{project.state.libraries}} | `{{project.manifest}}` |
-| Unit tests | {{project.testing.runner}} with {{project.testing.framework}} | {{project.testing.configFiles}} |
+| Unit tests | {{project.testing.runner}}{{#if project.testing.framework}} with {{project.testing.framework}}{{/if}} | {{project.testing.configFiles}} |
 | Lint | {{project.lint.tool}} | {{project.lint.configFiles}} |
 
 {{#if semantic.ui.precedence}}
@@ -67,7 +67,9 @@ These are the root instructions. Path-scoped conventions live in the scoped inst
 {{semantic.conventions.list}}
 {{/if}}
 - Reuse existing services from {{project.architecture.serviceDirs}} rather than creating duplicates.
+{{#if project.i18n.hasI18n}}
 - Route all user-facing strings through the project's translation mechanism — see `{{repo.prefix}}-templates.instructions.md`.
+{{/if}}
 - No inline styles. Styling lives in the component stylesheet.
 - No hard-coded colour or spacing values where design tokens exist — see `{{repo.prefix}}-branding.instructions.md`.
 
@@ -123,9 +125,9 @@ Use `{{repo.prefix}}-orchestrator` to run the full pipeline, or invoke an agent 
 {{#if repo.hasDesignTool}}
 | 4 | `{{repo.prefix}}-design-reviewer` | Implementation versus {{repo.designTool}} design |
 {{/if}}
-| 5 | `{{repo.prefix}}-test-generator` | New tests for files that have none |
-| 6 | `{{repo.prefix}}-test-fixer` | Fix failing tests and update existing tests |
-| 7 | `{{repo.prefix}}-reviewer` | Quality, correctness, conventions, acceptance criteria |
+| {{#if repo.hasDesignTool}}5{{else}}4{{/if}} | `{{repo.prefix}}-test-generator` | New tests for files that have none |
+| {{#if repo.hasDesignTool}}6{{else}}5{{/if}} | `{{repo.prefix}}-test-fixer` | Fix failing tests and update existing tests |
+| {{#if repo.hasDesignTool}}7{{else}}6{{/if}} | `{{repo.prefix}}-reviewer` | Quality, correctness, conventions, acceptance criteria |
 
 Specialists: {{repo.specialistAgents}}.
 {{#if repo.featureAgents}}

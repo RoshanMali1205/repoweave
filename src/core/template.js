@@ -89,7 +89,7 @@ function projectContext(profile,project,semantic={},repoExtra={}){
    ui:{components:names(ui?.components),layout:names(ui?.layout),icons:names(ui?.icons),hasLibrary:!!ui?.components?.length},
    i18n:{library:note(s.i18n,names(i18n?.libraries)[0]||null),libraries:names(i18n?.libraries),resourceDirs:i18n?.resourceDirs||[],locales:i18n?.locales||[],hasI18n:!!(i18n?.libraries?.length||i18n?.resourceFiles?.length)},
    state:{libraries:names(p.tooling?.state)},
-   testing:{runner:note(s.testing,t?.runner||null),framework:t?.framework||null,builder:t?.builder||null,configFiles:t?.configFiles||[],libraries:names(v(s.testLibraries)),specSuffix:spec,specGlob:spec?'**/*'+spec:null,specCount:specs?.count||0,hasSpecs:!!specs?.count,specLocation:loc.length>1?'mixed ('+loc.map(([k,n])=>locLabel[k]+' '+n).join(', ')+')':loc.length?locLabel[loc[0][0]]:null,e2e:v(s.e2e)||[],coverageReport:sonar?.properties?.coverageReport||null},
+   testing:{runner:note(s.testing,t?.runner||null),framework:t?.framework&&t.framework!==t.runner?t.framework:null,builder:t?.builder||null,configFiles:t?.configFiles||[],libraries:names(v(s.testLibraries)),specSuffix:spec,specGlob:spec?'**/*'+spec:null,specCount:specs?.count||0,hasSpecs:!!specs?.count,specLocation:loc.length>1?'mixed ('+loc.map(([k,n])=>locLabel[k]+' '+n).join(', ')+')':loc.length?locLabel[loc[0][0]]:null,e2e:v(s.e2e)||[],coverageReport:sonar?.properties?.coverageReport||null},
    lint:{tool:note(s.lint,lint?.tool||null),configFiles:lint?.configFiles||[]},
    format:{tool:fmt?.tool||null},
    sonar:{present:!!sonar,configFile:sonar?.configFile||null,projectKey:sonar?.properties?.projectKey||null,exclusions:sonar?.properties?.exclusions||null,coverageReport:sonar?.properties?.coverageReport||null},

@@ -36,6 +36,10 @@
         "title": "RepoWeave: Open Harness Studio"
       },
       {
+        "command": "repoweave.run",
+        "title": "RepoWeave: Generate Harness (All Steps)"
+      },
+      {
         "command": "repoweave.scan",
         "title": "RepoWeave: Analyze Repository"
       },
