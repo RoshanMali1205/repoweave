@@ -35,7 +35,7 @@ test('generated names use the prefix and omit defect and pull-request agents',as
  assert.match(orch.content,/researcher →|researcher/);
  assert.doesNotMatch(orch.content,/defect-analyst|pr-reviewer/);
  const reviewer=g.files.find(f=>f.path==='.claude/agents/my-app-reviewer.md');
- assert.deepEqual(fm(reviewer.content).tools,['Read','Glob','Grep']);
+ assert.equal(fm(reviewer.content).tools,'Read, Glob, Grep');
  const implementer=g.files.find(f=>f.path==='.codex/agents/my-app-implementer.toml');
  assert.doesNotMatch(implementer.content,/sandbox_mode/);
  assert.match(g.files.find(f=>f.path==='.codex/agents/my-app-reviewer.toml').content,/sandbox_mode = "read-only"/);
@@ -144,4 +144,21 @@ test('spec files are not routes, and the root file stays compact for extra proje
  assert(!/## Tech stack[\s\S]*## Tech stack/.test(text),'full template repeated for second project');
  assert(!text.includes('translation mechanism'),'translation rule without i18n');
  assert(!/Vitest(?: \(inferred; verify\))? with Vitest/.test(text),'runner repeated as framework');
+});
+test('agents get least-privilege tools, a scoped Claude delegate list and a verified-done workflow',async t=>{
+ const r=app(t),g=generate(await scan(r),{targets:['copilot','claude']});
+ const get=p=>g.files.find(f=>f.path===p).content;
+ for(const role of ['reviewer','planner','test-fixer','test-generator'])assert.ok(!fm(get(`.github/agents/my-app-${role}.agent.md`)).tools.includes('agent'),role);
+ assert.ok(fm(get('.github/agents/my-app-planner.agent.md')).tools.includes('edit'),'planner writes the design document');
+ assert.ok(!fm(get('.github/agents/my-app-reviewer.agent.md')).tools.includes('edit'));
+ const claudeTools=fm(get('.claude/agents/my-app-orchestrator.md')).tools.split(/,\s*(?![^()]*\))/);
+ assert.ok(claudeTools.some(x=>/^Agent\(.*my-app-planner.*my-app-reviewer.*\)$/.test(x)),'orchestrator delegate list is scoped');
+ assert.ok(!claudeTools.includes('Agent'));
+ const orch=get('.github/agents/my-app-orchestrator.agent.md');
+ assert.match(orch,/Step 0 — Baseline/);
+ assert.match(orch,/Step 6 — Verify/);
+ assert.match(orch,/"status": "complete \| partial \| blocked"/);
+ const process=get('.github/agents/my-app-implementer.agent.md').split('## Implementation process')[1].split('## Output format')[0];
+ assert.doesNotMatch(process,/^[2-9]\. /m,'ordered lists renumber themselves');
+ for(const role of ['implementer','ui-specialist'])assert.doesNotMatch(get(`.github/agents/my-app-${role}.agent.md`),/\[unknown: project\.(styles\.language|i18n\.library)/,role);
 });

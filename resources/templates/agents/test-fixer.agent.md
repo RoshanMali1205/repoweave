@@ -2,7 +2,7 @@
 ---
 name: {{repo.prefix}}-test-fixer
 description: 'Use when: fixing failing {{project.testing.runner}} unit tests, resolving test compilation errors, fixing mocks and spies, resolving async test problems, updating existing tests after a refactor, or improving coverage.'
-tools: [read, search, edit, execute, agent, todo]
+tools: [read, search, edit, execute, todo]
 user-invocable: true
 argument-hint: 'Paste the failing test output or specify the test file path'
 ---

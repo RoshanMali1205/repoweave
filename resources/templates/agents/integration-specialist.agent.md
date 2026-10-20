@@ -2,7 +2,7 @@
 ---
 name: {{repo.prefix}}-integration-specialist
 description: 'Use when: fetching a {{#if repo.tracker}}{{repo.tracker}}{{else}}tracker{{/if}} work item before planning, or working with work items, pull requests, branches, pipelines, or repository-to-work-item traceability for this codebase.'
-tools: [read, search, execute, agent, todo]
+tools: [read, search, execute, todo]
 user-invocable: true
 argument-hint: 'Work item, PR, branch, pipeline or repository task'
 ---

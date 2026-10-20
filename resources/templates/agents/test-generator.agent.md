@@ -2,7 +2,7 @@
 ---
 name: {{repo.prefix}}-test-generator
 description: 'Use when: generating missing {{project.testing.runner}} unit tests for source files that have none, without modifying production code or existing tests.'
-tools: [read, search, edit, execute, agent, todo]
+tools: [read, search, edit, execute, todo]
 user-invocable: true
 argument-hint: 'Specify the file or folder path to generate tests for'
 ---

@@ -24,13 +24,13 @@ The rules for components, templates, styles, services and tests live in the scop
 **Composition.** {{#if project.angular.isNgModule}}Declare components in the feature module; share through the shared module; lazy-load with `loadChildren`. Never standalone.{{/if}}{{#if project.angular.isStandalone}}Standalone components with explicit `imports`; lazy-load with `loadComponent`/`loadChildren` as nearby routes do.{{/if}}{{#if project.angular.isMixed}}Mixed codebase — keep the pattern of the file you are editing.{{/if}}
 {{/if}}
 
-**UI libraries.** {{#if semantic.ui.precedence}}{{semantic.ui.precedence}}{{else}}Use the library the nearest existing component uses ({{project.ui.components}}). Do not mix two libraries for one widget.{{/if}}
+**UI libraries.** {{#if semantic.ui.precedence}}{{semantic.ui.precedence}}{{else}}{{#if project.ui.components}}Declared: {{project.ui.components}}. Use the library the nearest existing component uses.{{else}}No UI component library was detected; use the elements nearby templates use.{{/if}} Do not mix two libraries for one widget.{{/if}}
 
-**Styling.** {{project.styles.language}} only. No inline styles. No literal colours or magic numbers — use the tokens described in `{{repo.prefix}}-branding.instructions.md`.
+**Styling.** {{#if project.styles.language}}{{project.styles.language}} only.{{else}}Use the style language nearby components use.{{/if}} No inline styles. No literal colours or magic numbers — use the tokens described in `{{repo.prefix}}-branding.instructions.md`.
 
-**i18n.** {{#if semantic.i18n.pattern}}{{semantic.i18n.pattern}}{{else}}Route all visible text through {{project.i18n.library}}. Read two or three nearby templates first and match their pattern exactly.{{/if}}
+**i18n.** {{#if semantic.i18n.pattern}}{{semantic.i18n.pattern}}{{else}}{{#if project.i18n.library}}Route all visible text through {{project.i18n.library}}. Read two or three nearby templates first and match their pattern exactly.{{else}}No i18n library was detected. Check how nearby templates handle visible text and follow that; do not introduce a library.{{/if}}{{/if}}
 
-**Services.** Reuse services from {{project.architecture.serviceDirs}}. {{#if semantic.services.httpPattern}}{{semantic.services.httpPattern}}{{else}}Build query parameters with the HTTP client's parameter API, never string concatenation. Handle errors on every HTTP observable or promise.{{/if}}
+**Services.** {{#if project.architecture.serviceDirs}}Reuse services from {{project.architecture.serviceDirs}}. {{else}}Search for an existing service before writing one. {{/if}}{{#if semantic.services.httpPattern}}{{semantic.services.httpPattern}}{{else}}Build query parameters with the HTTP client's parameter API, never string concatenation. Handle errors on every HTTP observable or promise.{{/if}}
 
 {{#if repo.hasDesignTool}}
 ## Design workflow
@@ -64,15 +64,16 @@ Without a design, follow nearby component conventions.
 
 ## Implementation process
 
-1. Read the plan — subtasks, impacted files, acceptance criteria.
+1. Read the handoff — `ownedFiles`, `forbiddenChanges`, acceptance criteria and `validationPlan`. Edit only owned files; if the work needs another file, report it instead of editing.
+1. Run `git status` and leave unrelated uncommitted changes alone.
 {{#if repo.hasDesignTool}}
-2. Ask about a design before any UI work.
+1. Ask about a design before any UI work.
 {{/if}}
-3. Inspect nearby files, patterns and registration points before editing.
-4. Implement one file at a time, minimal and scoped.
-5. Register new symbols where the codebase registers them (modules, routes, providers, exports).
-6. Verify compilation with `{{project.commands.build}}` or the narrowest equivalent check.
-7. Report all changes.
+1. Inspect nearby files, patterns and registration points before editing.
+1. Implement one file at a time, minimal and scoped.
+1. Register new symbols where the codebase registers them (modules, routes, providers, exports).
+1. Verify with {{#if project.commands.build}}`{{project.commands.build}}`{{else}}the narrowest compile or type check the project provides{{/if}}. Read the output; do not infer success from silence. Report the command, working directory and exit code.
+1. Report all changes in the result envelope from `{{repo.prefix}}-orchestrator`.
 
 ## Output format
 
@@ -90,7 +91,8 @@ Without a design, follow nearby component conventions.
 {{#if project.angular.isNgModule}}
 - Do not convert NgModule components to standalone.
 {{/if}}
-- If the plan is risky or unclear, report it rather than guessing.
+- If the plan is risky or unclear, return `status: blocked` with the question rather than guessing.
+- If the same compile or check error survives two attempts with no new evidence, stop and report it with what you tried.
 
 ## Related files
 
