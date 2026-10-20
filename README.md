@@ -35,7 +35,7 @@ To run every stage with one confirmation, use **RepoWeave: Generate Harness (All
 
 ## How it works
 
-![Scan, then Profile, then Preview, then Apply, then your coding assistant](images/how-it-works.svg)
+![Scan, then Profile, then Preview, then Apply, then your coding assistant](images/how-it-works.png)
 
 | Scan | Profile | Preview | Apply | Your coding assistant |
 | --- | --- | --- | --- | --- |
@@ -241,7 +241,8 @@ repoweave/
 │   ├── integrations.md     Optional MCP onboarding guide
 │   └── freshness.cjs       Read-only SessionStart freshness hook
 ├── images/
-│   ├── how-it-works.svg    Pipeline diagram used on this page
+│   ├── how-it-works.png    Pipeline diagram used on this page
+│   ├── how-it-works.svg    Source drawing for that diagram
 │   └── studio.gif          Harness Studio recording used on this page
 ├── docs/                   Architecture, comparison, roadmap, sources and validation notes
 └── test/                   Node test suite for the core engine and the extension workflow
