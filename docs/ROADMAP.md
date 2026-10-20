@@ -23,7 +23,7 @@
 - Multi-target shared skills are explicitly linked; native automatic discovery can vary by host. Single-target mode gives the cleanest folder conventions.
 - Hooks are preview features in some hosts. No Codex hook configuration is emitted by this version; this is a capability gap, not a claim that Codex has no hooks.
 - MCP account connection and server verification happen in the host. There is no built-in authenticated Jira/Azure/Figma client in this extension.
-- Existing Claude settings need manual hook merge. Modified generated files and root-block conflicts need deliberate resolution.
+- Existing Claude settings need manual hook merge. A conflict can be kept or, except for Claude settings, replaced with the proposal. An interrupted write can be restored from its journal. Removing the harness leaves hand-edited files and `semantic.json`.
 - Source scanning is bounded and reports omissions. No secret-detection heuristic is a complete guarantee; inspect AI context before sending it.
 - Case-sensitive path handling follows the host filesystem. Windows-specific edge cases and real editor interactions still need testing.
 - Automated crash recovery and removal of obsolete target files are not implemented.
