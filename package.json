@@ -2,7 +2,7 @@
   "name": "repoweave",
   "displayName": "RepoWeave — Agent Harness Studio",
   "description": "Generate a repository-aware agent harness for Copilot, Claude, and Codex. A guided studio analyzes the repo, previews every file, and writes only after you confirm.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "roshanmali",
   "license": "MIT",
   "icon": "resources/images/icon.png",
@@ -101,6 +101,21 @@
         "command": "repoweave.settings",
         "title": "RepoWeave: Open Settings",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "repoweave.resolve",
+        "title": "RepoWeave: Resolve Preview Conflicts",
+        "icon": "$(git-merge)"
+      },
+      {
+        "command": "repoweave.recover",
+        "title": "RepoWeave: Recover Interrupted Write",
+        "icon": "$(history)"
+      },
+      {
+        "command": "repoweave.remove",
+        "title": "RepoWeave: Remove Harness",
+        "icon": "$(trash)"
       }
     ],
     "menus": {
