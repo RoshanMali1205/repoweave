@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+- Generated orchestrator now starts with a baseline, keeps a resumable `state.json`, uses one result envelope that matches `harness.md`, and ends with a verify step that reports real commands and exit codes.
+- Least-privilege tools: only delegating agents carry `agent`; the planner may write the design document; the Claude orchestrator's `Agent(...)` list names only its own subagents.
+- Unknown facts no longer leak into agent instructions as `[unknown: ...]`; lists number correctly.
+- Reviewer asks for the diff or file list it cannot fetch itself and cites file and line.
+
 ## 0.1.3
 
 - Conflicts can be resolved in the studio: keep your edit, or use the RepoWeave proposal. Existing Claude settings can only be kept.

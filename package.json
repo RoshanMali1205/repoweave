@@ -2,7 +2,7 @@
   "name": "repoweave",
   "displayName": "RepoWeave — Agent Harness Studio",
   "description": "Generate a repository-aware agent harness for Copilot, Claude, and Codex. A guided studio analyzes the repo, previews every file, and writes only after you confirm.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "roshanmali",
   "license": "MIT",
   "icon": "resources/images/icon.png",
