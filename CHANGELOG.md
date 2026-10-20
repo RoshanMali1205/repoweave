@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.3
+
+- Conflicts can be resolved in the studio: keep your edit, or use the RepoWeave proposal. Existing Claude settings can only be kept.
+- A kept edit stays in place on later previews until you choose the proposal.
+- **RepoWeave: Recover Interrupted Write** restores a prepared backup or clears a leftover lock after a finished write.
+- **RepoWeave: Remove Harness** deletes generated files that still match the manifest. Hand-edited files, text outside a managed block, `.repoweave/semantic.json`, and backups stay.
+- Unsaved editors that overlap a preview can be saved, and RepoWeave previews again instead of writing over them.
+- The file list hides unchanged files until you ask to see them.
+
 ## 0.1.2
 
 - The studio highlights the next step (generate, preview, apply, or architecture review) instead of showing every command with the same weight.

@@ -42,7 +42,7 @@ Each source file belongs to the longest matching project root. Nested Angular/Re
 
 ## Write model
 
-Preview captures destination text and hashes of inspected source/config inputs. Apply rechecks both, rejects conflicts, acquires a lock, backs up prior content, writes with temporary siblings and rename, and writes the manifest last. Runtime failures trigger rollback of completed writes. A process crash can leave a lock and prepared journal; manual recovery is documented and automated crash recovery is future work.
+Preview captures destination text and hashes of inspected source/config inputs. Apply rechecks both, rejects unresolved conflicts, acquires a lock, backs up prior content, writes with temporary siblings and rename, and writes the manifest last. Runtime failures trigger rollback of completed writes. A prepared journal can be restored with Recover Interrupted Write. A lock left after a committed or rolled-back journal can be cleared. A lock with no journal is left in place.
 
 ## Tool permissions
 
