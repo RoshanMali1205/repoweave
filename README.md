@@ -4,7 +4,7 @@ Generate a repository-aware, multi-agent harness for Angular and React projects,
 
 *By Roshan Mali*
 
-Version 0.1.1 is a working local preview. It has not been published to the Visual Studio Marketplace.
+Version 0.1.2 is a working local preview. It has not been published to the Visual Studio Marketplace.
 
 ## Quick start
 
@@ -12,7 +12,7 @@ Version 0.1.1 is a working local preview. It has not been published to the Visua
 2. Open an Angular or React project and trust the workspace.
 3. Press **Ctrl+Shift+P** and run **RepoWeave: Generate Harness (All Steps)**. It analyzes the repository, shows the planned files, asks once before writing, applies them and validates the result.
 
-Prefer to go step by step? Use **RepoWeave: Analyze Repository**, **Preview Harness**, **Apply Previewed Harness** and **Validate Installed Harness**, or open the studio from the **RepoWeave** item in the status bar.
+Prefer to go step by step? Click **RepoWeave** in the status bar. The studio highlights the next action: analyze, preview, apply, then copy the architecture prompt. The status bar names that same step.
 
 ## Overview
 
@@ -130,7 +130,7 @@ Task prompts cover planning, delivery, missing tests, failing tests, change revi
 
 RepoWeave is distributed as a VSIX file for local installation. It requires VS Code 1.99 or later.
 
-1. Obtain `repoweave-0.1.0.vsix` from the release bundle, or build it from source with `npm run package` (see [Development](#development)).
+1. Obtain `repoweave-0.1.2.vsix` from the release bundle, or build it from source with `npm run package` (see [Development](#development)).
 2. In VS Code, run **Extensions: Install from VSIX...** from the Command Palette and select the file.
 3. Open your application repository and make sure the workspace is trusted.
 
@@ -140,27 +140,33 @@ The publisher id is `roshanmali`. The extension has not been published to the Ma
 
 ## Usage in VS Code
 
-1. Run **RepoWeave: Open Harness Studio**, or click **RepoWeave** in the status bar.
-2. Choose **Analyze** and review the architecture evidence report.
-3. Choose **Preview files**. A summary of proposed changes opens, and you can pick any file to view a before/after diff.
-4. Choose **Apply preview** and confirm.
-5. Choose **Copy architecture prompt** and paste it into your coding assistant. After it writes `.repoweave/semantic.json`, run Preview again.
+1. Run **RepoWeave: Open Harness Studio**, click **RepoWeave** in the status bar, or right-click the repository root in the Explorer.
+2. Follow the highlighted step. On a first run that step is **Generate harness (all steps)**. It analyzes the repository, lists the proposed files, and writes them after one confirmation.
+3. To go one step at a time, choose **Analyze**, then **Preview**. Click any proposed file in the studio to open a before/after diff, then **Apply preview**.
+4. Choose the coding assistant with **Change assistants** (GitHub Copilot, Claude Code, Codex, or several). Preview again after changing it.
+5. After the files are written, choose **Copy architecture prompt** and paste it into your coding assistant. After it writes `.repoweave/semantic.json`, run Preview again.
+
+The status bar shows the same next step when the studio is closed: Start, Preview, Apply, a conflict count, or Review. Apply stays unavailable until a preview has changes and no conflicts. Conflicts are listed in the studio and are never overwritten.
 
 If the custom agent list does not refresh after Apply, reload the coding client.
+
+A first-run walkthrough, **Create an agent harness**, is included for the Get Started page.
 
 All commands are also available from the Command Palette:
 
 | Command | Description |
 |---|---|
-| **RepoWeave: Open Harness Studio** | Opens the studio panel with all actions and the current analysis and preview status |
+| **RepoWeave: Open Harness Studio** | Opens the studio. The highlighted card is the next step, and proposed files open as diffs |
 | **RepoWeave: Generate Harness (All Steps)** | Analyzes the repository, shows the preview, and writes it after one confirmation, then validates |
 | **RepoWeave: Analyze Repository** | Scans the repository and opens the architecture evidence report |
 | **RepoWeave: Preview Harness** | Generates the harness in memory and shows proposed changes and diffs |
 | **RepoWeave: Apply Previewed Harness** | Writes the reviewed preview after a confirmation dialog |
 | **RepoWeave: Analyze Selected Files with AI** | Sends selected, reviewed files to a VS Code language model for evidence-bound observations |
 | **RepoWeave: Copy Architecture Review Prompt** | Copies a prompt that starts the bootstrap architecture review in your coding host |
-| **RepoWeave: Validate Installed Harness** | Checks installed files against the manifest, their syntax and their cross-references |
+| **RepoWeave: Validate Installed Harness** | Checks installed files against the manifest, their syntax and their cross-references, and opens a readable report |
 | **RepoWeave: Connect Azure DevOps or Jira** | Asks you to connect Azure DevOps, connect Jira, or continue from pasted or local requirements. The choice is stored for the next preview. RepoWeave does not sign in or call the tracker API |
+| **RepoWeave: Choose Coding Assistants** | Picks GitHub Copilot, Claude Code, Codex, or several. The choice is saved for this workspace. Preview again before applying |
+| **RepoWeave: Open Settings** | Opens RepoWeave settings for hooks, the agent-name prefix, and the scan limit |
 
 The extension requires Workspace Trust and supports filesystem workspaces, including VS Code remote extension hosts. Virtual workspaces are not supported. In a multi-root workspace, you choose the repository for each command. Changing RepoWeave settings discards the current preview, so preview again before applying.
 

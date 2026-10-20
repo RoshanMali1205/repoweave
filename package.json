@@ -1,8 +1,8 @@
 {
   "name": "repoweave",
   "displayName": "RepoWeave — Agent Harness Studio",
-  "description": "Generate repository-aware agent harnesses (agents, skills, instructions, prompts) for GitHub Copilot, Claude Code and Codex from Angular and React projects — with one command.",
-  "version": "0.1.1",
+  "description": "Generate a repository-aware agent harness for Copilot, Claude, and Codex. A guided studio analyzes the repo, previews every file, and writes only after you confirm.",
+  "version": "0.1.2",
   "publisher": "roshanmali",
   "license": "MIT",
   "icon": "resources/images/icon.png",
@@ -89,7 +89,65 @@
       },
       {
         "command": "repoweave.integrations",
-        "title": "RepoWeave: Connect Azure DevOps or Jira"
+        "title": "RepoWeave: Connect Azure DevOps or Jira",
+        "icon": "$(link)"
+      },
+      {
+        "command": "repoweave.targets",
+        "title": "RepoWeave: Choose Coding Assistants",
+        "icon": "$(account)"
+      },
+      {
+        "command": "repoweave.settings",
+        "title": "RepoWeave: Open Settings",
+        "icon": "$(settings-gear)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "repoweave.open",
+          "when": "explorerResourceIsRoot",
+          "group": "2_workspace@1"
+        },
+        {
+          "command": "repoweave.run",
+          "when": "explorerResourceIsRoot",
+          "group": "2_workspace@2"
+        }
+      ]
+    },
+    "walkthroughs": [
+      {
+        "id": "repoweave.welcome",
+        "title": "Create an agent harness",
+        "description": "Analyze this repository and write agents, skills, and instructions for GitHub Copilot, Claude Code, or Codex.",
+        "steps": [
+          {
+            "id": "open",
+            "title": "Open the studio",
+            "description": "Open an Angular or React folder and trust the workspace.\n[Open Harness Studio](command:repoweave.open)\nThe studio highlights the next step. The status bar shows the same step.",
+            "completionEvents": ["onCommand:repoweave.open"]
+          },
+          {
+            "id": "assistants",
+            "title": "Choose your coding assistant",
+            "description": "Pick GitHub Copilot, Claude Code, Codex, or more than one.\n[Choose Coding Assistants](command:repoweave.targets)\nPreview again after you change this. Hooks and the agent-name prefix live in Settings.",
+            "completionEvents": ["onCommand:repoweave.targets"]
+          },
+          {
+            "id": "generate",
+            "title": "Generate and review the files",
+            "description": "You confirm once before any file is written. Click a proposed file in the studio to see the before and after.\n[Generate Harness (All Steps)](command:repoweave.run)",
+            "completionEvents": ["onCommand:repoweave.run"]
+          },
+          {
+            "id": "review",
+            "title": "Review architecture in your assistant",
+            "description": "Copy a prompt and paste it into your coding assistant. It should write `.repoweave/semantic.json`. Preview again so the harness picks up those facts.\n[Copy Architecture Review Prompt](command:repoweave.bootstrap)",
+            "completionEvents": ["onCommand:repoweave.bootstrap"]
+          }
+        ]
       }
     ],
     "configuration": {
