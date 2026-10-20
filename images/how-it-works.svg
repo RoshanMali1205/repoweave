@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1130" height="156" viewBox="0 0 1130 156" role="img" aria-labelledby="howTitle howDesc">
+  <title id="howTitle">How RepoWeave works</title>
+  <desc id="howDesc">Horizontal flow: Scan, then Profile, then Preview, then Apply, then your coding assistant.</desc>
+  <rect width="1130" height="156" rx="18" fill="#0f172a"/>
+  <path d="M20 32H150L166 78L150 124H20Z" fill="#2EC4B6"/>
+  <path d="M180 32H340L356 78L340 124H180L196 78Z" fill="#F5C451"/>
+  <path d="M370 32H540L556 78L540 124H370L386 78Z" fill="#F5923A"/>
+  <path d="M570 32H700L716 78L700 124H570L586 78Z" fill="#3DDC97"/>
+  <path d="M730 32H1110V124H730L746 78Z" fill="#132337" stroke="#2EC4B6" stroke-width="2"/>
+  <text x="85" y="80" fill="#0B1220" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="middle">Scan</text>
+  <text x="268" y="80" fill="#0B1220" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="middle">Profile</text>
+  <text x="463" y="80" fill="#0B1220" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="middle">Preview</text>
+  <text x="643" y="80" fill="#0B1220" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="middle">Apply</text>
+  <text x="928" y="80" fill="#F8FAFC" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="middle">Your coding assistant</text>
+</svg>
