@@ -129,7 +129,11 @@ Open the studio with **RepoWeave: Open Harness Studio**, the **RepoWeave** statu
 
 To go one step at a time, choose **Analyze**, then **Preview**. Click any proposed file to open a before/after diff, then **Apply preview**. **Change assistants** picks GitHub Copilot, Claude Code, Codex, or several; preview again after changing it. After the files are written, **Copy architecture prompt** starts the review in your coding assistant. After it writes `.repoweave/semantic.json`, run Preview again.
 
-The status bar shows the same next step when the studio is closed: Start, Preview, Apply, a conflict count, or Review. Apply stays unavailable until a preview has changes and no conflicts. Conflicts are listed in the studio and are never overwritten. If the custom agent list does not refresh after Apply, reload the coding client.
+The status bar shows the same next step when the studio is closed: Start, Preview, Apply, a conflict count, or Review. Apply stays unavailable until a preview has changes and every conflict has a choice. For each conflict, choose **Keep mine** or **Use proposal**. Existing Claude settings can only be kept. Unchanged files are hidden until you choose **Show unchanged**.
+
+If editors that overlap the preview are unsaved, RepoWeave offers to save them and preview again instead of writing. **RepoWeave: Recover Interrupted Write** restores an interrupted apply from its backup, or clears a leftover lock when the write already finished. **RepoWeave: Remove Harness** deletes generated files that still match the manifest. Hand-edited files, text outside a managed block, `.repoweave/semantic.json`, and backups stay.
+
+If the custom agent list does not refresh after Apply, reload the coding client.
 
 A first-run walkthrough, **Create an agent harness**, is included for the Get Started page.
 
@@ -146,6 +150,9 @@ A first-run walkthrough, **Create an agent harness**, is included for the Get St
 | **RepoWeave: Connect Azure DevOps or Jira** | Asks you to connect Azure DevOps, connect Jira, or continue from pasted or local requirements. The choice is stored for the next preview. RepoWeave does not sign in or call the tracker API |
 | **RepoWeave: Choose Coding Assistants** | Picks GitHub Copilot, Claude Code, Codex, or several. The choice is saved for this workspace. Preview again before applying |
 | **RepoWeave: Open Settings** | Opens RepoWeave settings for hooks, the agent-name prefix, and the scan limit |
+| **RepoWeave: Resolve Preview Conflicts** | Walks each conflicting file and records Keep mine or Use proposal. Claude settings cannot be replaced |
+| **RepoWeave: Recover Interrupted Write** | Restores files from an interrupted apply, or removes a leftover lock when that write already finished |
+| **RepoWeave: Remove Harness** | Deletes generated files that still match the manifest. Hand-edited files, surrounding instruction text, `.repoweave/semantic.json`, and backups stay |
 
 The extension requires Workspace Trust and supports filesystem workspaces, including VS Code remote extension hosts. Virtual workspaces are not supported. In a multi-root workspace, you choose the repository for each command. Changing RepoWeave settings discards the current preview, so preview again before applying.
 
@@ -164,6 +171,8 @@ npm ci --omit=dev --ignore-scripts
 | `preview` | Prints the proposed files and their status (`create`, `update`, `unchanged` or `conflict`) as JSON, plus files retained from earlier targets. Nothing is written. |
 | `apply` | Prints the preview, then writes it only when `--yes` is supplied. Conflicts stop the apply before anything is written. |
 | `validate` | Validates the installed harness and prints the result as JSON. The exit code is non-zero when validation fails. |
+| `recover` | Restores an interrupted apply from the latest prepared journal, or removes a leftover lock when the journal is already committed or rolled back. |
+| `remove` | Deletes the installed harness. Requires `--yes`. Hand-edited files and `.repoweave/semantic.json` stay. |
 
 Options:
 
@@ -212,7 +221,7 @@ Fixed scan budgets also apply. The total inventory is capped at 50,000 files, in
 - **AI boundaries.** AI review is optional and user-initiated. You select the files, inspect the redacted context, and choose a model exposed through the VS Code Language Model API. Context is limited to 60,000 characters, and redaction is heuristic, not a guarantee. RepoWeave stores no API keys. Observations cannot execute commands or replace files.
 - **Refresh.** Run Analyze and Preview again after project changes. Unchanged generated files are updated, and user-edited files are surfaced as conflicts.
 
-Outputs from deselected targets are retained and listed, not deleted automatically. If the process crashes during Apply, inspect `.repoweave/write.lock` and the latest backup journal before recovery. Do not delete the lock blindly.
+Outputs from deselected targets are retained and listed, not deleted automatically. If Apply is interrupted, run **RepoWeave: Recover Interrupted Write** or `node scripts/cli.js recover`. A prepared journal is restored from its backup. A lock left after a committed or rolled-back journal is removed. A lock with no journal is left in place. **RepoWeave: Remove Harness** deletes only manifest files that still match; it refuses to run while a prepared journal is locked.
 
 ## Project structure
 
@@ -275,7 +284,8 @@ Before any public release, choose a publisher you own, confirm the product name 
 - Local tsconfig `paths` and `baseUrl` aliases are resolved. Package-based `tsconfig` inheritance, decorator namespace imports and complex computed metadata may stay unresolved. Angular implicit standalone behavior is only inferred when the Angular version is resolved from a lockfile. Semantic facts stay unknown until `.repoweave/semantic.json` exists.
 - Hooks are preview features in some hosts, and no Codex hook configuration is emitted in this version.
 - MCP connections and authentication happen in the host. There is no built-in Jira, Azure DevOps or Figma client.
-- Existing Claude settings need a manual hook merge, and conflicts need deliberate resolution. Automated crash recovery and removal of obsolete target files are not implemented.
+- Existing Claude settings need a manual hook merge. RepoWeave will not replace that file; choose Keep mine and merge the proposed hook by hand.
+- **RepoWeave: Remove Harness** removes the installed manifest. It does not delete retained files from an earlier target that are no longer in the manifest.
 - Windows-specific edge cases and real editor interactions still need testing.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the full capability status and prioritized next work.
