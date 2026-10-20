@@ -13,7 +13,7 @@ const readTpl=f=>fs.readFileSync(path.join(templateRoot,f),'utf8').replace(/\r\n
 const cell=x=>String(x??'unknown').replace(/[\n\r|<>]/g,' ');
 const links=(from,refs)=>'\n\n## Required context\n\n'+refs.map(r=>'- ['+r+']('+path.posix.relative(path.posix.dirname(from),r)+')').join('\n')+'\n';
 const TARGETS=['copilot','claude','codex'];
-const READ_ONLY=new Set(['planner','researcher','reviewer','design-reviewer']);
+const READ_ONLY=new Set(['researcher','reviewer','design-reviewer']);
 const AGENTS=[
  {id:'orchestrator'},
  {id:'planner'},
@@ -36,7 +36,7 @@ function splitFm(text){
  const j=text.indexOf('\n---\n',4);if(j<0)throw Error('Frontmatter not closed');
  return {meta:YAML.parse(text.slice(4,j))||{},body:text.slice(j+5)};
 }
-function joinFm(meta,body){return '---\n'+YAML.stringify(meta)+'---\n\n'+String(body).trim()+'\n';}
+function joinFm(meta,body){return '---\n'+YAML.stringify(meta,{lineWidth:0})+'---\n\n'+String(body).trim()+'\n';}
 function normalizeTargets(targets){
  const set=new Set(targets||['copilot']);
  const order=TARGETS.filter(t=>set.has(t));
@@ -82,9 +82,10 @@ function forCopilot(text,readOnly,agents){
  if(agents){meta.agents=agents;if(Array.isArray(meta.tools)&&!meta.tools.includes('agent'))meta.tools.push('agent');changed=true;}
  return changed?joinFm(meta,body):(text.endsWith('\n')?text:text+'\n');
 }
-function forClaude(text,readOnly){
+function forClaude(text,readOnly,agents){
  const {meta,body}=splitFm(text);
- return joinFm({name:meta.name,description:meta.description,tools:claudeTools(readOnly,meta.tools)},body);
+ const tools=claudeTools(readOnly,meta.tools).map(t=>t==='Agent'&&agents?'Agent('+agents.join(', ')+')':t);
+ return joinFm({name:meta.name,description:meta.description,tools:tools.join(', ')},body);
 }
 function forCodex(text,readOnly){
  const {meta,body}=splitFm(text);
@@ -178,7 +179,7 @@ function generate(profile,options={}){
    const refs=[...canonical];
    if(a.id==='orchestrator')refs.push(...rolePaths[t].filter(p=>p!==file));
    if(a.id==='harness-builder')refs.push('.repoweave/BOOTSTRAP.md','.repoweave/semantic.schema.json','.repoweave/semantic.example.json');
-   let content=t==='codex'?forCodex(rendered,readOnly):t==='claude'?forClaude(rendered,readOnly):forCopilot(rendered,readOnly,a.id==='orchestrator'?active.filter(x=>x!==a).map(x=>names(x.id)):null);
+   let content=t==='codex'?forCodex(rendered,readOnly):t==='claude'?forClaude(rendered,readOnly,a.id==='orchestrator'?active.filter(x=>x!==a).map(x=>names(x.id)):null):forCopilot(rendered,readOnly,a.id==='orchestrator'?active.filter(x=>x!==a).map(x=>names(x.id)):null);
    if(t!=='codex')content=content.trimEnd()+links(file,refs);
    else content=content.replace(/developer_instructions = (".*")\n$/,(_,q)=>{const body=JSON.parse(q)+'\nRead '+refs.join(', ')+'.';return 'developer_instructions = '+JSON.stringify(body)+'\n';});
    add(file,content.endsWith('\n')?content:content+'\n',refs);

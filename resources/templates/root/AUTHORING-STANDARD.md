@@ -20,7 +20,7 @@ How every instruction, agent, prompt and skill file for this repository is writt
 Keys appear in a fixed order. Omit keys that do not apply; never reorder.
 
 - Instructions: `description`, `applyTo`.
-- Agents: `name`, `description`, `tools`, `user-invocable`, `argument-hint`.
+- Agents: `name`, `description`, `tools`, `user-invocable`, `argument-hint`, `agents`. The generated orchestrator adds `agents` on Copilot to name the only subagents it may call; Claude gets the same list inside its `Agent(...)` tool entry.
 - Prompts: `description`, then `agent` only when the prompt delegates.
 - Skills: `name`, `description`.
 
@@ -29,6 +29,8 @@ Rules:
 - `name` is kebab-case and matches the filename stem.
 - `description` starts `Use when:` for instructions and agents, so trigger matching is consistent.
 - `tools` uses short aliases (`read`, `search`, `edit`, `execute`, `web`, `agent`, `todo`). Never enumerate individual tool IDs — the list rots.
+- Only an agent that delegates carries `agent`. Reviewers, planners and test agents do not; subagents cannot spawn further subagents reliably across hosts.
+- Give each agent the least tools its role needs. A read-only role has no `edit`.
 - Omit `tools` entirely to allow all tools. Do not comment it out.
 - Do not set `model`. Model choice belongs to the caller.
 
