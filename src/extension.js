@@ -321,7 +321,7 @@ async function dispatch(action,root){
   else if(action==='bootstrap')await copyBootstrap(root);
   else if(action==='validate')await document(validationReport(validateInstalled(root)),'Validation');
   else if(action==='targets')await chooseTargets(root);
-  else if(action==='settings')await vscode.commands.executeCommand('workbench.action.openSettings','@ext:roshanmali.repoweave');
+  else if(action==='settings')await vscode.commands.executeCommand('workbench.action.openSettings','@ext:roshanmali1205.repoweave');
  }finally{busy=false;}
 }
 function report(e){log?.appendLine(e?.message||String(e));vscode.window.showErrorMessage('RepoWeave: '+(e?.message||e));}

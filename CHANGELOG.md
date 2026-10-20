@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Publisher id is now `roshanmali1205`; the extension identifier is `roshanmali1205.repoweave`. Uninstall `roshanmali.repoweave` before installing.
+
 ## 0.1.4
 
 - Generated orchestrator now starts with a baseline, keeps a resumable `state.json`, uses one result envelope that matches `harness.md`, and ends with a verify step that reports real commands and exit codes.

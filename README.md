@@ -29,7 +29,7 @@ Prefer to go step by step? Click **RepoWeave** in the status bar. The studio hig
 
 Harness Studio on a real project: Analyze, Preview, then Apply only after review.
 
-Requires VS Code 1.99 or later. The publisher id is `roshanmali`. The VSIX bundles the scanner libraries, so the application project does not need an install step.
+Requires VS Code 1.99 or later. The publisher id is `roshanmali1205`. The VSIX bundles the scanner libraries, so the application project does not need an install step.
 
 To run every stage with one confirmation, use **RepoWeave: Generate Harness (All Steps)**.
 
